@@ -23,8 +23,7 @@ typedef struct {
 	ft_funparam_t funparam;
 } fs_tp_param_t;
 
-FServer::FServer(const string addr, const int port,
-		const unsigned int max_conn_num) :
+FServer::FServer(const string addr, const int port, const unsigned int max_conn_num) :
 		addr(addr), port(port), max_conn_num(max_conn_num) {
 	funHandle = NULL;
 	stopped = 1;
@@ -43,7 +42,7 @@ FServer::~FServer() {
 int FServer::init() {
 	if (!this->funHandle) {
 		DEBUG_PRINTLN_MSG("process function handle uninitialized!"
-		" Please call setProcessFun first to init it!");
+				" Please call setProcessFun first to init it!");
 		return -1;
 	}
 	if (setSignal()) {
@@ -75,7 +74,7 @@ int FServer::setSignal() {
 	new_act.sa_handler = FServer::sigHandler;
 	sigemptyset(&new_act.sa_mask);
 	new_act.sa_flags = 0;
-	if(::sigaction(SIGINT, &new_act, NULL) < 0) {
+	if (::sigaction(SIGINT, &new_act, NULL) < 0) {
 		return -1;
 	}
 #endif
@@ -118,22 +117,18 @@ int FServer::run() {
 		DEBUG_PRINTLN_MSG("server init failed!");
 		return -1;
 	}
-	int ret = server_socket.bind(this->addr.empty() ? NULL : this->addr.c_str(),
-			this->port);
+	int ret = server_socket.bind(this->addr.empty() ? NULL : this->addr.c_str(), this->port);
 	if (ret < 0) {
-		DEBUG_PRINTLN_ERR("server bind error", server_socket.getErrCode(),
-				server_socket.getErrStr().c_str());
+		DEBUG_PRINTLN_ERR("server bind error", server_socket.getErrCode(), server_socket.getErrStr().c_str());
 		return ret;
 	}
 	ret = server_socket.listen(listen_queue_len);
 	if (ret < 0) {
-		DEBUG_PRINTLN_ERR("server listen error", server_socket.getErrCode(),
-				server_socket.getErrStr().c_str());
+		DEBUG_PRINTLN_ERR("server listen error", server_socket.getErrCode(), server_socket.getErrStr().c_str());
 		return ret;
 	}
 
-	DEBUG_PRINT_T(1, "server listening on %s:%d ...\n",
-			this->addr.empty() ? "*" : this->addr.c_str(), this->port);
+	DEBUG_PRINT_T(1, "server listening on %s:%d ...\n", this->addr.empty() ? "*" : this->addr.c_str(), this->port);
 
 	ret = this->loop();
 
@@ -162,8 +157,7 @@ int FServer::loop() {
 			if (errcode == EINTR) {
 				continue;
 			}
-			DEBUG_PRINTLN_ERR("server accept error", server_socket.getErrCode(),
-					server_socket.getErrStr().c_str());
+			DEBUG_PRINTLN_ERR("server accept error", server_socket.getErrCode(), server_socket.getErrStr().c_str());
 			return -1;
 		}
 	}
@@ -181,13 +175,11 @@ int FServer::process(FSocketTcp *p_socket) {
 	tp_param->funparam.handle = (ft_fun_t) this->funHandle;
 	tp_param->funparam.param = (void*) p_socket;
 	// ---
-	ft_funparam_t funparam = { (ft_fun_t) FServer::thread_proxy,
-			(void*) tp_param };
+	ft_funparam_t funparam = { (ft_fun_t) FServer::thread_proxy, (void*) tp_param };
 	FThread thread(&funparam);
 	int ret = thread.start();
 	if (ret) {
-		DEBUG_PRINT_T(1, "thread create error, sid: %d, ret: %d.\n",
-				p_socket->getSocketHandle(), ret);
+		DEBUG_PRINT_T(1, "thread create error, sid: %d, ret: %d.\n", p_socket->getSocketHandle(), ret);
 		free(tp_param); // !!!
 		return -1;
 	} else {

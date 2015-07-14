@@ -31,8 +31,7 @@ private:
 	int readAndParseCmd(FSocketTcp *socket);
 	int readHeaders(FSocketTcp *socket, header_map_t &headerMap);
 	int parseHeaderLine(const string headerLine, string &key, string &value);
-	int parseHostAndPort(const string uri, const header_map_t &headerMap,
-			string &host, int &port);
+	int parseHostAndPort(const string uri, const header_map_t &headerMap, string &host, int &port);
 private:
 	string method;
 	string uri;

@@ -55,8 +55,7 @@ public:
 
 protected:
 	int createSocket();
-	int setSockaddr(sockaddr_in &addr, const int sin_family, const char *host,
-			const unsigned int port);
+	int setSockaddr(sockaddr_in &addr, const int sin_family, const char *host, const unsigned int port);
 
 protected:
 	int sock_fd;

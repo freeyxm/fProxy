@@ -12,7 +12,7 @@
 
 namespace freeyxm {
 
-class FSocketTcp: public freeyxm::FSocket {
+class FSocketTcp: public FSocket {
 public:
 	FSocketTcp(int sin_family = AF_INET);
 	virtual ~FSocketTcp();

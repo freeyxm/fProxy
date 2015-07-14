@@ -45,8 +45,7 @@ FSocket::~FSocket() {
 
 int FSocket::createSocket() {
 	if (this->sock_fd == -1) {
-		this->sock_fd = ::socket(this->socket_domain, this->socket_type,
-				this->socket_protocol);
+		this->sock_fd = ::socket(this->socket_domain, this->socket_type, this->socket_protocol);
 		if (this->sock_fd == -1) {
 			return -1;
 		}
@@ -54,8 +53,7 @@ int FSocket::createSocket() {
 	return 0;
 }
 
-int FSocket::setSockaddr(sockaddr_in &addr, const int sin_family,
-		const char *host, const unsigned int port) {
+int FSocket::setSockaddr(sockaddr_in &addr, const int sin_family, const char *host, const unsigned int port) {
 	::memset(&addr, 0, sizeof(addr));
 	addr.sin_family = this->sin_family;
 	addr.sin_port = ::htons(port);
@@ -70,8 +68,7 @@ int FSocket::setSockaddr(sockaddr_in &addr, const int sin_family,
 		if (!host_info) {
 			return -1;
 		}
-		this->remoteAddress.sin_addr.s_addr =
-				*(size_t*) host_info->h_addr_list[0];
+		this->remoteAddress.sin_addr.s_addr = *(size_t*) host_info->h_addr_list[0];
 	}
 	return 0;
 }
@@ -82,14 +79,12 @@ int FSocket::bind(const char *addr, const unsigned int port) {
 			return -1;
 		}
 		int opt = 1;
-		::setsockopt(this->sock_fd, SOL_SOCKET, SO_REUSEADDR, (char*) &opt,
-				sizeof(opt));
+		::setsockopt(this->sock_fd, SOL_SOCKET, SO_REUSEADDR, (char*) &opt, sizeof(opt));
 	}
 	if (this->setSockaddr(this->localAddress, this->sin_family, addr, port)) {
 		return -1;
 	}
-	return ::bind(this->sock_fd, (struct sockaddr*) &this->localAddress,
-			sizeof this->localAddress);
+	return ::bind(this->sock_fd, (struct sockaddr*) &this->localAddress, sizeof this->localAddress);
 }
 
 int FSocket::connect(const char *host, const unsigned int port) {
@@ -101,8 +96,7 @@ int FSocket::connect(const char *host, const unsigned int port) {
 	if (this->setSockaddr(this->remoteAddress, this->sin_family, host, port)) {
 		return -1;
 	}
-	return ::connect(this->sock_fd, (struct sockaddr*) &this->remoteAddress,
-			sizeof this->remoteAddress);
+	return ::connect(this->sock_fd, (struct sockaddr*) &this->remoteAddress, sizeof this->remoteAddress);
 }
 
 void FSocket::close() {
@@ -197,8 +191,7 @@ int FSocket::setSocketTimeout(int send_flag, int timeout) {
 	struct timeval time;
 	time.tv_sec = timeout;
 	time.tv_usec = 0;
-	return ::setsockopt(this->sock_fd, SOL_SOCKET, optname, (char*) &time,
-			sizeof(time));
+	return ::setsockopt(this->sock_fd, SOL_SOCKET, optname, (char*) &time, sizeof(time));
 }
 
 } /* namespace freeyxm */

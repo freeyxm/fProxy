@@ -30,8 +30,7 @@ FUtil::~FUtil() {
 	// TODO Auto-generated destructor stub
 }
 
-void FUtil::print_hex(FILE *out, const unsigned char *bytes, const int size,
-		const int line_num) {
+void FUtil::print_hex(FILE *out, const unsigned char *bytes, const int size, const int line_num) {
 	int i, j;
 	for (i = 0, j = 1; i < size; ++i, ++j) {
 		fprintf(out, " %02x", (unsigned) bytes[i]);

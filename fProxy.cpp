@@ -24,7 +24,7 @@ void serv_process_http(FSocketTcp *socket);
 
 int main(void) {
 
-	setvbuf(stdout,(char*)NULL,_IOLBF,0);
+	setvbuf(stdout, (char*) NULL, _IOLBF, 0);
 
 #if __win32__
 	static WSADATA wsa_data;
@@ -34,7 +34,7 @@ int main(void) {
 	}
 #endif
 
-	FServer server("",2012,100);
+	FServer server("", 2012, 100);
 	server.setProcessFun(serv_process_socket5);
 	int ret = server.run();
 	printf("ret = %d, done!\n", ret);

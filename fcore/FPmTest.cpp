@@ -25,7 +25,7 @@ FPmTest::~FPmTest() {
  */
 long FPmTest::getRunTime(const int threadNum, const ft_funparam_t *p_fp) {
 	if (!p_fp) {
-		fprintf(stdout,"tpm: p_fp not init!\n");
+		fprintf(stdout, "tpm: p_fp not init!\n");
 		return -1;
 	}
 

@@ -20,8 +20,7 @@ typedef void (*fs_fun_t)(FSocketTcp*);
 
 class FServer {
 public:
-	FServer(const string addr = "", const int port = 2012,
-			const unsigned int max_conn_num = 0);
+	FServer(const string addr = "", const int port = 2012, const unsigned int max_conn_num = 0);
 	virtual ~FServer();
 
 	void setProcessFun(const fs_fun_t fun);

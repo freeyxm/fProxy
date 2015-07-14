@@ -32,7 +32,7 @@ void conenctServr(void*);
 
 int main(void) {
 
-	setvbuf(stdout,(char*)NULL,_IOLBF,0);
+	setvbuf(stdout, (char*) NULL, _IOLBF, 0);
 
 #if __WIN32__
 	static WSADATA wsa_data;
@@ -48,12 +48,11 @@ int main(void) {
 	fp.param = NULL;
 
 	g_count = 0;
-	long t = FPmTest::getRunTime(4,&fp);
-	if(t>0) {
-		printf("done! count: %d, time: %ldms, p: %d/s.\n", g_count, t/1000,
-				(int)(g_count*1000000.0f / t));
+	long t = FPmTest::getRunTime(4, &fp);
+	if (t > 0) {
+		printf("done! count: %d, time: %ldms, p: %d/s.\n", g_count, t / 1000, (int) (g_count * 1000000.0f / t));
 	} else {
-		printf("ret = %ld\n",t);
+		printf("ret = %ld\n", t);
 	}
 
 	return 0;
@@ -64,13 +63,11 @@ void conenctServr(void*) {
 	while (g_count < 30000) {
 		int ret = socket.connect("127.0.0.1", 2012);
 		if (ret) {
-			DEBUG_PRINTLN_ERR("connect error!", socket.getErrCode(),
-					socket.getErrStr().c_str());
+			DEBUG_PRINTLN_ERR("connect error!", socket.getErrCode(), socket.getErrStr().c_str());
 			break;
 		} else {
 			char buf[1024];
-			sprintf(buf, "hello, my socket handle is %d.",
-					socket.getSocketHandle());
+			sprintf(buf, "hello, my socket handle is %d.", socket.getSocketHandle());
 			ret = socket.send(buf, strlen(buf));
 			//DEBUG_PRINT("send ret: %d\n", ret);
 

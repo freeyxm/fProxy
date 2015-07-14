@@ -39,8 +39,7 @@ public:
 	void htons(const unsigned short hs, char *p_ns);
 	void ntons(const unsigned short ns, char *p_ns);
 
-	static int onceRecvAndSend(FSocketTcp *recv_socket, FSocketTcp *send_socket,
-			char *buf, const int size);
+	static int onceRecvAndSend(FSocketTcp *recv_socket, FSocketTcp *send_socket, char *buf, const int size);
 	static int loopRecvAndSend(FSocketTcp *socket1, FSocketTcp *socket2);
 };
 

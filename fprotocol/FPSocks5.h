@@ -131,19 +131,15 @@ private:
 	int validate(int method, FSocketTcp *socket);
 	int validateUserPass(const string &username, const string &password);
 
-	s5_method_t parseAddrPort(fp_socks5_request_t *s5_request,
-			const int request_size, string &dst_addr, unsigned int &dst_port);
-	s5_method_t parseAddrPort(fp_socks5_udp_t *s5_udp, int &udp_size,
-			string &dst_addr, unsigned int &dst_port);
+	s5_method_t parseAddrPort(fp_socks5_request_t *s5_request, const int request_size, string &dst_addr,
+			unsigned int &dst_port);
+	s5_method_t parseAddrPort(fp_socks5_udp_t *s5_udp, int &udp_size, string &dst_addr, unsigned int &dst_port);
 
-	s5_method_t dealRequestConnect(FSocketTcp *socket,
-			const fp_socks5_request_t *s5_request, const string dst_addr,
+	s5_method_t dealRequestConnect(FSocketTcp *socket, const fp_socks5_request_t *s5_request, const string dst_addr,
 			const unsigned int dst_port);
-	s5_method_t dealRequestBind(FSocketTcp *socket,
-			const fp_socks5_request_t *s5_request, const string dst_addr,
+	s5_method_t dealRequestBind(FSocketTcp *socket, const fp_socks5_request_t *s5_request, const string dst_addr,
 			const unsigned int dst_port);
-	s5_method_t dealRequestUdp(FSocketTcp *socket,
-			const fp_socks5_request_t *s5_request, const string src_addr,
+	s5_method_t dealRequestUdp(FSocketTcp *socket, const fp_socks5_request_t *s5_request, const string src_addr,
 			const unsigned int src_port);
 
 private:

@@ -56,12 +56,10 @@ int FP_Socks5::dealValidate(FSocketTcp *socket) {
 
 	int ret = socket->recv((char*) &s5_method, sizeof(s5_method));
 	if (ret < 0) { // error occur.
-		DEBUG_PRINTLN_ERR("recv error", socket->getErrCode(),
-				socket->getErrStr().c_str());
+		DEBUG_PRINTLN_ERR("recv error", socket->getErrCode(), socket->getErrStr().c_str());
 		return -1;
 	} else if (ret < S5_MIN_METHOD_SIZE) { // Bad request.
-		DEBUG_PRINTLN_MSG(
-				"Bad request: method msg size smaller than S5_MIN_METHOD_SIZE!");
+		DEBUG_PRINTLN_MSG("Bad request: method msg size smaller than S5_MIN_METHOD_SIZE!");
 		return -1;
 	}
 
@@ -71,8 +69,7 @@ int FP_Socks5::dealValidate(FSocketTcp *socket) {
 	}
 
 	DEBUG_PRINT_LOCK();
-	DEBUG_PRINT(0, "ver:%d, nMethods: %d, methods:", s5_method.ver,
-			s5_method.nMethods);
+	DEBUG_PRINT(0, "ver:%d, nMethods: %d, methods:", s5_method.ver, s5_method.nMethods);
 #ifdef _DEBUG_
 	FUtil::print_hex(stdout,(unsigned char*) s5_method.methods,s5_method.nMethods,0);
 #endif
@@ -84,8 +81,7 @@ int FP_Socks5::dealValidate(FSocketTcp *socket) {
 	int nsend = sizeof(s5_method.ver) + sizeof(s5_method.method);
 	ret = socket->send((char*) &s5_method, nsend);
 	if (ret < 0 || ret != nsend) { // send error.
-		DEBUG_PRINTLN_ERR("send error", socket->getErrCode(),
-				socket->getErrStr().c_str());
+		DEBUG_PRINTLN_ERR("send error", socket->getErrCode(), socket->getErrStr().c_str());
 		return -1;
 	}
 
@@ -100,8 +96,7 @@ int FP_Socks5::dealValidate(FSocketTcp *socket) {
 
 int FP_Socks5::choseMethod(const fp_socks5_method_t *method) {
 	for (unsigned int i = 0; i < (unsigned int) method->nMethods; ++i) {
-		if (find(method_list.begin(), method_list.end(), method->methods[i])
-				!= method_list.end()) {
+		if (find(method_list.begin(), method_list.end(), method->methods[i]) != method_list.end()) {
 			return method->methods[i];
 		}
 	}
@@ -121,14 +116,12 @@ int FP_Socks5::validate(int method, FSocketTcp *socket) {
 		fp_socks5_userpass_t s5_up, s5_up_reply;
 		int ret = socket->recv((char*) &s5_up, S5_MAX_USERPASS_SIZE);
 		if (ret < 0) {
-			DEBUG_PRINTLN_ERR("recv error", socket->getErrCode(),
-					socket->getErrStr().c_str());
+			DEBUG_PRINTLN_ERR("recv error", socket->getErrCode(), socket->getErrStr().c_str());
 			return -1;
 		} else if (ret == 0) { // remote socket closed ...
 			return 0;
 		} else if (ret < S5_MIN_USERPASS_SIZE) {
-			DEBUG_PRINTLN_MSG(
-					"Bad request: username/password msg size smaller than S5_MIN_USERPASS_SIZE!");
+			DEBUG_PRINTLN_MSG("Bad request: username/password msg size smaller than S5_MIN_USERPASS_SIZE!");
 			return -1;
 		}
 
@@ -138,8 +131,7 @@ int FP_Socks5::validate(int method, FSocketTcp *socket) {
 		do {
 			if (s5_up.ver != S5_USERPASS_VERSION) {
 				s5_up_reply.status = S5_USERPASS_STATUS_FAILURE;
-				DEBUG_PRINTLN_MSG(
-						"Bad request: username/password msg field illegal!");
+				DEBUG_PRINTLN_MSG("Bad request: username/password msg field illegal!");
 				break;
 			}
 
@@ -151,8 +143,7 @@ int FP_Socks5::validate(int method, FSocketTcp *socket) {
 			string username((char*) s5_up.username, s5_up.ulen);
 			string password((char*) s5_up.p_password, *s5_up.p_plen);
 
-			DEBUG_PRINT(1, "username: %s, password: %s\n", username.c_str(),
-					password.c_str());
+			DEBUG_PRINT(1, "username: %s, password: %s\n", username.c_str(), password.c_str());
 
 			// validate username/password ...
 			if (!validateUserPass(username, password)) {
@@ -163,8 +154,7 @@ int FP_Socks5::validate(int method, FSocketTcp *socket) {
 		int nsend = sizeof(s5_up_reply.ver) + sizeof(s5_up_reply.status);
 		ret = socket->send((char*) &s5_up_reply, nsend);
 		if (ret < 0 || ret != nsend) {
-			DEBUG_PRINTLN_ERR("send error", socket->getErrCode(),
-					socket->getErrStr().c_str());
+			DEBUG_PRINTLN_ERR("send error", socket->getErrCode(), socket->getErrStr().c_str());
 			return -1;
 		}
 
@@ -181,8 +171,7 @@ int FP_Socks5::validate(int method, FSocketTcp *socket) {
 	return 0;
 }
 
-int FP_Socks5::validateUserPass(const string &username,
-		const string &password) {
+int FP_Socks5::validateUserPass(const string &username, const string &password) {
 	// ...
 	if (username != "hithere" || password != "hereyouare") {
 		return 0;
@@ -195,14 +184,12 @@ int FP_Socks5::dealRequest(FSocketTcp *socket) {
 
 	int ret = socket->recv((char*) &s5_request, S5_MAX_REQUEST_SIZE);
 	if (ret < 0) { // error.
-		DEBUG_PRINTLN_ERR("recv error", socket->getErrCode(),
-				socket->getErrStr().c_str());
+		DEBUG_PRINTLN_ERR("recv error", socket->getErrCode(), socket->getErrStr().c_str());
 		return -1;
 	} else if (ret == 0) { // remote socket closed ...
 		return 0;
 	} else if (ret < S5_MIN_REQUEST_SIZE) { // Bad request.
-		DEBUG_PRINTLN_MSG(
-				"Bad request: request msg size smaller than S5_MIN_REQUEST_SIZE!");
+		DEBUG_PRINTLN_MSG("Bad request: request msg size smaller than S5_MIN_REQUEST_SIZE!");
 		return -1;
 	}
 	if (s5_request.ver != S5_VERSION || s5_request.rsv != S5_RESERVE) { // Bad request.
@@ -226,24 +213,20 @@ int FP_Socks5::dealRequest(FSocketTcp *socket) {
 	unsigned int dst_port;
 
 	do {
-		s5_reply.rep = this->parseAddrPort(&s5_request, ret, dst_addr,
-				dst_port);
+		s5_reply.rep = this->parseAddrPort(&s5_request, ret, dst_addr, dst_port);
 		if (s5_reply.rep != S5_REP_SUCCESS) {
 			break;
 		}
 
 		switch (s5_request.cmd) {
 		case S5_CMD_CONNECT:
-			s5_reply.rep = this->dealRequestConnect(socket, &s5_request,
-					dst_addr, dst_port);
+			s5_reply.rep = this->dealRequestConnect(socket, &s5_request, dst_addr, dst_port);
 			break;
 		case S5_CMD_BIND:
-			s5_reply.rep = this->dealRequestBind(socket, &s5_request, dst_addr,
-					dst_port);
+			s5_reply.rep = this->dealRequestBind(socket, &s5_request, dst_addr, dst_port);
 			break;
 		case S5_CMD_UDP:
-			s5_reply.rep = this->dealRequestUdp(socket, &s5_request, dst_addr,
-					dst_port);
+			s5_reply.rep = this->dealRequestUdp(socket, &s5_request, dst_addr, dst_port);
 			break;
 		default:
 			s5_reply.rep = S5_REP_CMD_UNSUPPORTED;
@@ -255,8 +238,7 @@ int FP_Socks5::dealRequest(FSocketTcp *socket) {
 		int nsend = &s5_reply.rsv - &s5_reply.ver + sizeof(s5_reply.rsv); // byte after s5_repsly.rsv are all 0x00 now.
 		ret = socket->send((char*) &s5_reply, nsend);
 		if (ret < 0 || ret != nsend) {
-			DEBUG_PRINTLN_ERR("send error", socket->getErrCode(),
-					socket->getErrStr().c_str());
+			DEBUG_PRINTLN_ERR("send error", socket->getErrCode(), socket->getErrStr().c_str());
 			return -1;
 		}
 	}
@@ -264,8 +246,8 @@ int FP_Socks5::dealRequest(FSocketTcp *socket) {
 	return 0;
 }
 
-s5_method_t FP_Socks5::parseAddrPort(fp_socks5_request_t *s5_request,
-		const int request_size, string &dst_addr, unsigned int &dst_port) {
+s5_method_t FP_Socks5::parseAddrPort(fp_socks5_request_t *s5_request, const int request_size, string &dst_addr,
+		unsigned int &dst_port) {
 	s5_method_t rep = S5_REP_SUCCESS;
 
 	// parse dst_addr:
@@ -278,8 +260,7 @@ s5_method_t FP_Socks5::parseAddrPort(fp_socks5_request_t *s5_request,
 		if (this->ip4_byte2str(s5_request->addr_ip4, dst_addr) < 0) {
 			rep = S5_REP_HOST_UNREACHABLE;
 		}
-		s5_request->p_port = s5_request->addr_ip4
-				+ sizeof(s5_request->addr_ip4);
+		s5_request->p_port = s5_request->addr_ip4 + sizeof(s5_request->addr_ip4);
 		break;
 	case S5_ATYP_DOMAIN: {
 		int len = (*(unsigned char*) s5_request->addr_domain);
@@ -296,8 +277,7 @@ s5_method_t FP_Socks5::parseAddrPort(fp_socks5_request_t *s5_request,
 			rep = S5_REP_FAILURE; // ...
 			break;
 		}
-		s5_request->p_port = s5_request->addr_ip4
-				+ sizeof(s5_request->addr_ip6);
+		s5_request->p_port = s5_request->addr_ip4 + sizeof(s5_request->addr_ip6);
 		rep = S5_REP_ATYP_UNSUPPORTED;
 		break;
 	default:
@@ -316,8 +296,7 @@ s5_method_t FP_Socks5::parseAddrPort(fp_socks5_request_t *s5_request,
 	return rep;
 }
 
-s5_method_t FP_Socks5::parseAddrPort(fp_socks5_udp_t *s5_udp, int &udp_size,
-		string &dst_addr, unsigned int &dst_port) {
+s5_method_t FP_Socks5::parseAddrPort(fp_socks5_udp_t *s5_udp, int &udp_size, string &dst_addr, unsigned int &dst_port) {
 	s5_method_t rep = S5_REP_SUCCESS;
 
 	// parse dst_addr:
@@ -377,16 +356,14 @@ s5_method_t FP_Socks5::parseAddrPort(fp_socks5_udp_t *s5_udp, int &udp_size,
  *   S5_REP_TERMINATED: end with error, but don't need reply.
  *   other: end with error, need to reply.
  */
-s5_method_t FP_Socks5::dealRequestConnect(FSocketTcp *socket,
-		const fp_socks5_request_t *s5_request, const string dst_addr,
+s5_method_t FP_Socks5::dealRequestConnect(FSocketTcp *socket, const fp_socks5_request_t *s5_request, const string dst_addr,
 		const unsigned int dst_port) {
 	s5_method_t rep = S5_REP_SUCCESS;
 	FSocketTcp serv_socket;
 
 	do {
 		if (serv_socket.connect(dst_addr.c_str(), dst_port) < 0) {
-			DEBUG_PRINTLN_ERR("connect error", socket->getErrCode(),
-					socket->getErrStr().c_str());
+			DEBUG_PRINTLN_ERR("connect error", socket->getErrCode(), socket->getErrStr().c_str());
 			rep = S5_REP_HOST_UNREACHABLE;
 			break;
 		}
@@ -414,8 +391,7 @@ s5_method_t FP_Socks5::dealRequestConnect(FSocketTcp *socket,
 
 		int ret = socket->send((char*) &s5_reply, nsend);
 		if (ret < 0 || ret != nsend) {
-			DEBUG_PRINTLN_ERR("send error", socket->getErrCode(),
-					socket->getErrStr().c_str());
+			DEBUG_PRINTLN_ERR("send error", socket->getErrCode(), socket->getErrStr().c_str());
 			rep = S5_REP_TERMINATED;
 			break;
 		}
@@ -434,8 +410,7 @@ s5_method_t FP_Socks5::dealRequestConnect(FSocketTcp *socket,
  *   S5_REP_TERMINATED: end with error, but don't need reply.
  *   other: end with error, need to reply.
  */
-s5_method_t FP_Socks5::dealRequestBind(FSocketTcp *socket,
-		const fp_socks5_request_t *s5_request, const string dst_addr,
+s5_method_t FP_Socks5::dealRequestBind(FSocketTcp *socket, const fp_socks5_request_t *s5_request, const string dst_addr,
 		const unsigned int dst_port) {
 
 	// here should check whether client has a good connect with server or not use dst_addr/dst_port!
@@ -447,26 +422,22 @@ s5_method_t FP_Socks5::dealRequestBind(FSocketTcp *socket,
 	do {
 		ret = bind_socket.bind(NULL, 0);
 		if (ret < 0) {
-			DEBUG_PRINTLN_ERR("bind error", bind_socket.getErrCode(),
-					bind_socket.getErrStr().c_str());
+			DEBUG_PRINTLN_ERR("bind error", bind_socket.getErrCode(), bind_socket.getErrStr().c_str());
 			return S5_REP_FAILURE;
 		}
 		{
 			sockaddr_in addr;
 			unsigned int addr_len = sizeof(addr);
-			ret = ::getsockname(bind_socket.getSocketHandle(),
-					(struct sockaddr*) &addr, &addr_len);
+			ret = ::getsockname(bind_socket.getSocketHandle(), (struct sockaddr*) &addr, &addr_len);
 			if (ret < 0) {
-				DEBUG_PRINTLN_ERR("getsockname error", FUtil::getErrCode(),
-						FUtil::getErrStr().c_str());
+				DEBUG_PRINTLN_ERR("getsockname error", FUtil::getErrCode(), FUtil::getErrStr().c_str());
 				return S5_REP_FAILURE;
 			}
 			bind_socket.setLocalAddress(addr);
 		}
 
 		if (bind_socket.listen()) {
-			DEBUG_PRINTLN_ERR("listen error", bind_socket.getErrCode(),
-					bind_socket.getErrStr().c_str());
+			DEBUG_PRINTLN_ERR("listen error", bind_socket.getErrCode(), bind_socket.getErrStr().c_str());
 			return S5_REP_FAILURE;
 		}
 
@@ -477,17 +448,14 @@ s5_method_t FP_Socks5::dealRequestBind(FSocketTcp *socket,
 		bind_reply.rsv = S5_RESERVE;
 		//<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 		bind_reply.atyp = S5_ATYP_IP4; // chang to support ip6 ... !!!
-		string bind_addr = FSocket::inet_ntoa(
-				bind_socket.getLocalAddress().sin_addr);
+		string bind_addr = FSocket::inet_ntoa(bind_socket.getLocalAddress().sin_addr);
 		FProtocol::ip4_str2byte(bind_addr.c_str(), bind_reply.addr_ip4);
-		FProtocol::ntons(bind_socket.getLocalAddress().sin_port,
-				(char*) bind_reply.addr_ip4 + 4);
+		FProtocol::ntons(bind_socket.getLocalAddress().sin_port, (char*) bind_reply.addr_ip4 + 4);
 		int nsend = 4 + 4 + 2;
 		//<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 		ret = socket->send((char*) &bind_reply, nsend);
 		if (ret < 0 || ret != nsend) {
-			DEBUG_PRINTLN_ERR("send error", socket->getErrCode(),
-					socket->getErrStr().c_str());
+			DEBUG_PRINTLN_ERR("send error", socket->getErrCode(), socket->getErrStr().c_str());
 			return S5_REP_TERMINATED;
 		}
 
@@ -496,17 +464,13 @@ s5_method_t FP_Socks5::dealRequestBind(FSocketTcp *socket,
 			// socks server may wait here forever, so It's important to find a solution !!!
 			server_socket = bind_socket.accept();
 			if (!server_socket) {
-				DEBUG_PRINTLN_ERR("accept error", server_socket->getErrCode(),
-						server_socket->getErrStr().c_str());
+				DEBUG_PRINTLN_ERR("accept error", server_socket->getErrCode(), server_socket->getErrStr().c_str());
 				return S5_REP_FAILURE;
 			}
 			// check addr == dst_addr:
-			string req_addr = FSocket::inet_ntoa(
-					bind_socket.getRemoteAddress().sin_addr);
+			string req_addr = FSocket::inet_ntoa(bind_socket.getRemoteAddress().sin_addr);
 			if (req_addr != dst_addr) {
-				DEBUG_PRINT_T(1,
-						"addr validate failed, dst_addr: %s, req_addr: %s.\n",
-						dst_addr.c_str(), req_addr.c_str());
+				DEBUG_PRINT_T(1, "addr validate failed, dst_addr: %s, req_addr: %s.\n", dst_addr.c_str(), req_addr.c_str());
 				delete server_socket; // auto close().
 				continue;
 			}
@@ -520,8 +484,7 @@ s5_method_t FP_Socks5::dealRequestBind(FSocketTcp *socket,
 			//<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 			ret = socket->send((char*) &bind_reply, nsend);
 			if (ret < 0 || ret != nsend) {
-				DEBUG_PRINTLN_ERR("send error", socket->getErrCode(),
-						socket->getErrStr().c_str());
+				DEBUG_PRINTLN_ERR("send error", socket->getErrCode(), socket->getErrStr().c_str());
 				delete server_socket; // auto close().
 				return S5_REP_TERMINATED;
 			}
@@ -542,8 +505,7 @@ s5_method_t FP_Socks5::dealRequestBind(FSocketTcp *socket,
  *   S5_REP_TERMINATED: end with error, but don't need reply.
  *   other: end with error, need to reply.
  */
-s5_method_t FP_Socks5::dealRequestUdp(FSocketTcp *socket,
-		const fp_socks5_request_t *s5_request, const string src_addr,
+s5_method_t FP_Socks5::dealRequestUdp(FSocketTcp *socket, const fp_socks5_request_t *s5_request, const string src_addr,
 		const unsigned int src_port) {
 
 	FSocketUdp udp_serv_socket, udp_socket;
@@ -551,25 +513,21 @@ s5_method_t FP_Socks5::dealRequestUdp(FSocketTcp *socket,
 	do {
 		ret = udp_serv_socket.bind(NULL, 0); // ...
 		if (ret < 0) {
-			DEBUG_PRINTLN_ERR("bind error", udp_serv_socket.getErrCode(),
-					udp_serv_socket.getErrStr().c_str());
+			DEBUG_PRINTLN_ERR("bind error", udp_serv_socket.getErrCode(), udp_serv_socket.getErrStr().c_str());
 			return S5_REP_FAILURE;
 		}
 		{
 			sockaddr_in addr;
 			unsigned int addr_len = sizeof(addr);
-			ret = ::getsockname(udp_serv_socket.getSocketHandle(),
-					(struct sockaddr*) &addr, &addr_len);
+			ret = ::getsockname(udp_serv_socket.getSocketHandle(), (struct sockaddr*) &addr, &addr_len);
 			if (ret < 0) {
-				DEBUG_PRINTLN_ERR("getsockname error", FUtil::getErrCode(),
-						FUtil::getErrStr().c_str());
+				DEBUG_PRINTLN_ERR("getsockname error", FUtil::getErrCode(), FUtil::getErrStr().c_str());
 				return S5_REP_FAILURE;
 			}
 			udp_serv_socket.setLocalAddress(addr);
 		}
 		if (udp_socket.createSocketUdp()) {
-			DEBUG_PRINTLN_ERR("socket error", udp_serv_socket.getErrCode(),
-					udp_serv_socket.getErrStr().c_str());
+			DEBUG_PRINTLN_ERR("socket error", udp_serv_socket.getErrCode(), udp_serv_socket.getErrStr().c_str());
 			return S5_REP_FAILURE;
 		}
 	} while (0);
@@ -592,8 +550,7 @@ s5_method_t FP_Socks5::dealRequestUdp(FSocketTcp *socket,
 	//<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 	ret = socket->send((char*) &bind_reply, nsend);
 	if (ret < 0 || ret != nsend) {
-		DEBUG_PRINTLN_ERR("send error", socket->getErrCode(),
-				socket->getErrStr().c_str());
+		DEBUG_PRINTLN_ERR("send error", socket->getErrCode(), socket->getErrStr().c_str());
 		return S5_REP_TERMINATED;
 	}
 
@@ -619,22 +576,19 @@ s5_method_t FP_Socks5::dealRequestUdp(FSocketTcp *socket,
 		FD_SET(tcp_sid, &r_fds);
 		select_ret = ::select(nfds, &r_fds, NULL, NULL, NULL);
 		if (select_ret < 0) {
-			DEBUG_PRINTLN_ERR("select error", FUtil::getErrCode(),
-					FUtil::getErrStr().c_str());
+			DEBUG_PRINTLN_ERR("select error", FUtil::getErrCode(), FUtil::getErrStr().c_str());
 			break;
 		} else if (select_ret == 0) { // should't happen here!
 			break;
 		}
 
-		if (select_ret && FD_ISSET(udp_serv_sid,&r_fds)) {
+		if (select_ret && FD_ISSET(udp_serv_sid, &r_fds)) {
 			do {
 				ret = 0;
 				nrecv = udp_serv_socket.recvFrom((char*) &s5_udp,
-						S5_MAX_UDP_SIZE, &client_addr);
+				S5_MAX_UDP_SIZE, &client_addr);
 				if (nrecv < 0) {
-					DEBUG_PRINTLN_ERR("recvfrom error",
-							udp_serv_socket.getErrCode(),
-							udp_serv_socket.getErrStr().c_str());
+					DEBUG_PRINTLN_ERR("recvfrom error", udp_serv_socket.getErrCode(), udp_serv_socket.getErrStr().c_str());
 					ret = -1;
 					break;
 				} else if (nrecv == 0) { // the peer has performed an orderly shutdown.
@@ -642,47 +596,39 @@ s5_method_t FP_Socks5::dealRequestUdp(FSocketTcp *socket,
 					break;
 				}
 
-				if (nrecv <= S5_MIN_UDP_SIZE
-						|| s5_udp.frag // do not support frag.
-						|| s5_udp.rsv[0] != S5_UDP_RESERVED1
-						|| s5_udp.rsv[1] != S5_UDP_RESERVED2) { // illegal msg.
+				if (nrecv <= S5_MIN_UDP_SIZE || s5_udp.frag // do not support frag.
+						|| s5_udp.rsv[0] != S5_UDP_RESERVED1 || s5_udp.rsv[1] != S5_UDP_RESERVED2) { // illegal msg.
 					break;
 				}
 				if (src_port && (src_port != ::ntohs(client_addr.sin_port))) {
 					break;
 				}
-				if (is_check_addr
-						&& (src_addr != FSocket::inet_ntoa(client_addr.sin_addr))) {
+				if (is_check_addr && (src_addr != FSocket::inet_ntoa(client_addr.sin_addr))) {
 					break;
 				}
-				if (this->parseAddrPort(&s5_udp, nrecv, dst_addr,
-						dst_port) != S5_REP_SUCCESS) {
+				if (this->parseAddrPort(&s5_udp, nrecv, dst_addr, dst_port) != S5_REP_SUCCESS) {
 					break;
 				}
 
-				ret = udp_socket.sendTo((char*) s5_udp.p_data, nrecv,
-						dst_addr.c_str(), dst_port); // nrecv updated by parseAddrPort.
+				ret = udp_socket.sendTo((char*) s5_udp.p_data, nrecv, dst_addr.c_str(), dst_port); // nrecv updated by parseAddrPort.
 				if (ret < 0 || ret != nrecv) {
-					DEBUG_PRINTLN_ERR("sendto error", udp_socket.getErrCode(),
-							udp_socket.getErrStr().c_str());
+					DEBUG_PRINTLN_ERR("sendto error", udp_socket.getErrCode(), udp_socket.getErrStr().c_str());
 					ret = -1; // error and break;
 					break;
 				}
 
-				DEBUG_PRINT(1, "client, nrecv= %d, sendto= %s:%u\n", nrecv,
-						dst_addr.c_str(), dst_port);
+				DEBUG_PRINT(1, "client, nrecv= %d, sendto= %s:%u\n", nrecv, dst_addr.c_str(), dst_port);
 			} while (0);
 			if (ret) {
 				break;
 			}
 			--select_ret;
 		} // end if
-		if (select_ret && FD_ISSET(udp_sid,&r_fds)) {
+		if (select_ret && FD_ISSET(udp_sid, &r_fds)) {
 			nrecv = udp_socket.recvFrom((char*) &s5_udp, S5_MAX_UDP_SIZE, NULL);
 			DEBUG_PRINT(1, "server, nrecv= %d\n", nrecv);
 			if (nrecv < 0) {
-				DEBUG_PRINTLN_ERR("recvfrom error", udp_socket.getErrCode(),
-						udp_socket.getErrStr().c_str());
+				DEBUG_PRINTLN_ERR("recvfrom error", udp_socket.getErrCode(), udp_socket.getErrStr().c_str());
 				break;
 			} else if (nrecv == 0) { // the peer has performed an orderly shutdown.
 				break;
@@ -693,13 +639,12 @@ s5_method_t FP_Socks5::dealRequestUdp(FSocketTcp *socket,
 
 			ret = udp_serv_socket.sendTo((char*) &s5_udp, nrecv, &client_addr);
 			if (ret < 0 || ret != nrecv) {
-				DEBUG_PRINTLN_ERR("sendto error", udp_serv_socket.getErrCode(),
-						udp_serv_socket.getErrStr().c_str());
+				DEBUG_PRINTLN_ERR("sendto error", udp_serv_socket.getErrCode(), udp_serv_socket.getErrStr().c_str());
 				break;
 			}
 			--select_ret;
 		} // end if
-		if (select_ret && FD_ISSET(tcp_sid,&r_fds)) { // A UDP association terminates when the TCP connection that the UDP ASSOCIATE request arrived on terminates.
+		if (select_ret && FD_ISSET(tcp_sid, &r_fds)) { // A UDP association terminates when the TCP connection that the UDP ASSOCIATE request arrived on terminates.
 			ret = socket->recv((char*) &s5_udp, S5_MAX_UDP_SIZE);
 			if (ret == 0) {
 				break;

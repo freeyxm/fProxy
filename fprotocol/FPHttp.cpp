@@ -75,8 +75,7 @@ int FPHttp::readAndParseCmd(FSocketTcp *socket) {
 	uri = FString::trim(line.substr(pos1 + 1, pos2 - pos1 - 1));
 	version = FString::trim(line.substr(pos2 + 1));
 
-	DEBUG_PRINT(1, ">>>CMD: method=%s,uri=%s,ver=%s.\n", method.c_str(),
-			uri.c_str(), version.c_str());
+	DEBUG_PRINT(1, ">>>CMD: method=%s,uri=%s,ver=%s.\n", method.c_str(), uri.c_str(), version.c_str());
 	return 1;
 }
 
@@ -98,15 +97,13 @@ int FPHttp::readHeaders(FSocketTcp *socket, header_map_t &headerMap) {
 		name = FString::tolower(name);
 		headerMap.insert(header_map_t::value_type(name, value));
 	}
-	for (header_map_t::iterator it = headerMap.begin(); it != headerMap.end();
-			++it) {
+	for (header_map_t::iterator it = headerMap.begin(); it != headerMap.end(); ++it) {
 		DEBUG_PRINT(1, "%s: %s\n", it->first.c_str(), it->second.c_str());
 	}
 	return 0;
 }
 
-int FPHttp::parseHeaderLine(const string headerLine, string &name,
-		string &value) {
+int FPHttp::parseHeaderLine(const string headerLine, string &name, string &value) {
 	name.clear();
 	value.clear();
 	string line = FString::trim(headerLine);
@@ -119,8 +116,7 @@ int FPHttp::parseHeaderLine(const string headerLine, string &name,
 	return 0;
 }
 
-int FPHttp::parseHostAndPort(const string uri, const header_map_t &headerMap,
-		string &host, int &port) {
+int FPHttp::parseHostAndPort(const string uri, const header_map_t &headerMap, string &host, int &port) {
 	string host_port;
 	size_t pos1 = uri.find("http://"), pos2;
 	if (pos1 != string::npos) {

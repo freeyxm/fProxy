@@ -20,14 +20,12 @@ public:
 	int createSocketUdp();
 
 	int recvFrom(char *buf, const size_t size, struct sockaddr_in *addr);
-	int sendTo(const char *buf, const size_t size,
-			const struct sockaddr_in *addr);
+	int sendTo(const char *buf, const size_t size, const struct sockaddr_in *addr);
 
 	int recvFrom(char *buf, const size_t size);
 	int sendTo(const char *buf, const size_t size);
 
-	int sendTo(const char *buf, const size_t size, const char *host,
-			const unsigned int port);
+	int sendTo(const char *buf, const size_t size, const char *host, const unsigned int port);
 };
 
 } /* namespace freeyxm */

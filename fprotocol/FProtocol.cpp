@@ -84,15 +84,13 @@ void FProtocol::ntons(const unsigned short ns, char *p_ns) {
  * onceRecvAndSend
  * return: 1, success; 0, recv_socket closed; -1, error.
  */
-int FProtocol::onceRecvAndSend(FSocketTcp *recv_socket, FSocketTcp *send_socket,
-		char *buf, const int buf_size) {
+int FProtocol::onceRecvAndSend(FSocketTcp *recv_socket, FSocketTcp *send_socket, char *buf, const int buf_size) {
 	int nrecv, nsend;
 	int ret = 1;
 	do {
 		nrecv = recv_socket->recv(buf, buf_size);
 		if (nrecv < 0) {
-			DEBUG_PRINTLN_ERR("recv error", recv_socket->getErrCode(),
-					recv_socket->getErrStr().c_str());
+			DEBUG_PRINTLN_ERR("recv error", recv_socket->getErrCode(), recv_socket->getErrStr().c_str());
 			ret = -1;
 			break;
 		} else if (nrecv == 0) {
@@ -102,8 +100,7 @@ int FProtocol::onceRecvAndSend(FSocketTcp *recv_socket, FSocketTcp *send_socket,
 
 		nsend = send_socket->send(buf, nrecv);
 		if (nsend < 0 || nsend != nrecv) {
-			DEBUG_PRINTLN_ERR("send error", send_socket->getErrCode(),
-					send_socket->getErrStr().c_str());
+			DEBUG_PRINTLN_ERR("send error", send_socket->getErrCode(), send_socket->getErrStr().c_str());
 			ret = -1;
 			break;
 		}
@@ -131,21 +128,20 @@ int FProtocol::loopRecvAndSend(FSocketTcp *socket1, FSocketTcp *socket2) {
 		FD_SET(s_sid, &r_fds);
 		select_ret = ::select(nfds, &r_fds, NULL, NULL, NULL);
 		if (select_ret < 0) {
-			DEBUG_PRINTLN_ERR("select error", FUtil::getErrCode(),
-					FUtil::getErrStr().c_str());
+			DEBUG_PRINTLN_ERR("select error", FUtil::getErrCode(), FUtil::getErrStr().c_str());
 			break;
 		} else if (select_ret == 0) { // should't happen here!
 			break;
 		}
 
-		if (select_ret && FD_ISSET(c_sid,&r_fds)) {
+		if (select_ret && FD_ISSET(c_sid, &r_fds)) {
 			if (FProtocol::onceRecvAndSend(socket1, socket2, relay_buf,
 			RELAY_BUF_SIZE) <= 0) {
 				break;
 			}
 			--select_ret;
 		}
-		if (select_ret && FD_ISSET(s_sid,&r_fds)) {
+		if (select_ret && FD_ISSET(s_sid, &r_fds)) {
 			if (FProtocol::onceRecvAndSend(socket2, socket1, relay_buf,
 			RELAY_BUF_SIZE) <= 0) {
 				break;
