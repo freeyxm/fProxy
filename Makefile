@@ -1,8 +1,9 @@
 CXX = g++
 OBJS = 
 INCLUDES = -I"."
-LIBS = -L./fprotocol -lfprotocol -L./fcore/ -lfcore -lpthreadGC2 -lwsock32 #-lws2_32
-CXXFLAGS = -g -O0 -Wall -fmessage-length=0 -D__WIN32__ $(INCLUDES) -D_DEBUG_ -D_DEBUG_MUTEX_
+#LIBS = -L./fprotocol -lfprotocol -L./fcore/ -lfcore -lpthreadGC2 -lwsock32 #-lws2_32
+LIBS = -L./fprotocol -lfprotocol -L./fcore/ -lfcore -lpthread
+CXXFLAGS = -g -O0 -Wall -fmessage-length=0 $(INCLUDES) -D_DEBUG_ -D_DEBUG_MUTEX_ #-D__WIN32__
 LDFLAGS = $(LIBS) #-mwindows
 
 TARGET = fProxy.exe fClient.exe test.exe
@@ -19,6 +20,8 @@ flibs:
 
 .PHONY: clean
 clean:
+	cd fcore && make clean
+	cd fprotocol && make clean
 	rm -rf $(OBJS) $(TARGET)
 	
 .PHONY: cleanall

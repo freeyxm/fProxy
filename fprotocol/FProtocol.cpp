@@ -9,6 +9,7 @@
 #include "fcore/FUtil.h"
 #include "fcore/FString.h"
 #include <cstdio>
+#include <cstdlib>
 #ifdef __WIN32__
 #include <winsock.h>
 #else
@@ -57,7 +58,7 @@ int FProtocol::ip4_str2byte(const string ip_str, unsigned char *ip_byte) {
 		if (ip1.empty() || !FString::isAllDigit(ip1)) {
 			return -1;
 		}
-		ip[i] = atoi(ip1.c_str());
+		ip[i] = ::atoi(ip1.c_str());
 		if (ip[i] < 0 || ip[i] > 255) {
 			return -1;
 		}

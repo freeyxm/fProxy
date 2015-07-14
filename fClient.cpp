@@ -10,6 +10,7 @@
 #include "fcore/FPmTest.h"
 #include <cstdio>
 #include <cstdlib>
+#include <cstring>
 #include <pthread.h>
 #ifdef __WIN32__
 #include <windows.h>
@@ -33,11 +34,13 @@ int main(void) {
 
 	setvbuf(stdout,(char*)NULL,_IOLBF,0);
 
+#if __WIN32__
 	static WSADATA wsa_data;
 	if (WSAStartup((WORD) (1 << 8 | 1), &wsa_data) != 0) {
 		printf("WSAStartup error!\n");
 		return -1;
 	}
+#endif
 	printf("client ready!\n");
 
 	ft_funparam_t fp;
@@ -66,7 +69,7 @@ void conenctServr(void*) {
 			break;
 		} else {
 			char buf[1024];
-			sprintf(buf, "hello, my socket handle is %d.\0",
+			sprintf(buf, "hello, my socket handle is %d.",
 					socket.getSocketHandle());
 			ret = socket.send(buf, strlen(buf));
 			//DEBUG_PRINT("send ret: %d\n", ret);

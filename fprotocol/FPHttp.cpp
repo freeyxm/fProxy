@@ -9,6 +9,7 @@
 #include "fcore/FUtil.h"
 #include "fcore/FString.h"
 #include <cstdlib>
+#include <cstring>
 
 namespace freeyxm {
 

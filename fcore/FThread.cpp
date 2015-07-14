@@ -9,11 +9,14 @@
 #include "FUtil.h"
 #include <cstring>
 #include <cstdlib>
+#if __linux__
+#include <errno.h>
+#endif
 
 namespace freeyxm {
 
 FThread::FThread(const ft_funparam_t *p_fp) {
-	this->threadHandle.p = NULL; // ...
+	this->threadHandle = 0; // ...
 	if (p_fp) {
 		::memcpy(&this->funparam, p_fp, sizeof(this->funparam));
 	}
@@ -31,7 +34,7 @@ int FThread::start() {
 	::memcpy(p_fp, &this->funparam, sizeof(this->funparam));
 	ret = ::pthread_create(&this->threadHandle, NULL, startThread, p_fp);
 	if (ret) {
-		this->threadHandle.p = NULL;
+		this->threadHandle = 0;
 		::free(p_fp);
 		return ret;
 	}
@@ -49,7 +52,7 @@ void* FThread::startThread(void *p_param) {
 
 int FThread::testThread() {
 	int ret = 0;
-	if (this->threadHandle.p) {
+	if (this->threadHandle) {
 		// test thread whether running or not ...
 		int kill_rc = ::pthread_kill(this->threadHandle, 0);
 		switch (kill_rc) {
@@ -58,7 +61,7 @@ int FThread::testThread() {
 			break;
 		case ESRCH: // No such process.
 			::pthread_join(this->threadHandle, NULL); // ...
-			this->threadHandle.p = NULL;
+			this->threadHandle = 0;
 			ret = 0;
 			break;
 		default: // Error occured.
@@ -70,30 +73,30 @@ int FThread::testThread() {
 }
 
 int FThread::join() {
-	if (this->threadHandle.p) {
+	if (this->threadHandle) {
 		int ret = FThread::join(this->threadHandle);
-		this->threadHandle.p = NULL;
+		this->threadHandle = 0;
 		return ret;
 	}
 	return 0;
 }
 
 int FThread::detach() {
-	if (this->threadHandle.p) {
+	if (this->threadHandle) {
 		return FThread::detach(this->threadHandle);
 	}
 	return 0;
 }
 
 int FThread::cancel() {
-	if (this->threadHandle.p) {
+	if (this->threadHandle) {
 		return FThread::cancel(this->threadHandle);
 	}
 	return 0;
 }
 
 int FThread::kill(const int signum) {
-	if (this->threadHandle.p) {
+	if (this->threadHandle) {
 		return FThread::kill(this->threadHandle, signum);
 	}
 	return 0;

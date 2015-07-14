@@ -11,9 +11,10 @@
 #ifdef __WIN32__
 #include <winsock.h>
 #include <wininet.h>
-#else
-#include<sys/types.h>
+#elif __linux__
+#include <sys/types.h>
 #include <sys/socket.h>
+#include <netinet/in.h>
 #endif
 #include <string>
 
@@ -45,7 +46,7 @@ public:
 	void setRemoteAddress(const sockaddr_in &addr);
 	void setLocalAddress(const sockaddr_in &addr);
 
-	static string inet_ntoa(struct in_addr);
+	static string inet_ntoa(struct in_addr addr);
 
 	int getSinFamily();
 	void setSinFamily(int sin_family);

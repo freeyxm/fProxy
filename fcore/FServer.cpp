@@ -10,6 +10,9 @@
 #include "FThread.h"
 #include <signal.h>
 #include <cstdlib>
+#if __linux__
+#include <errno.h>
+#endif
 
 namespace freeyxm {
 

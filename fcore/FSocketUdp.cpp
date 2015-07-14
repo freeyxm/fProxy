@@ -26,7 +26,7 @@ int FSocketUdp::createSocketUdp() {
 
 int FSocketUdp::recvFrom(char *buf, const size_t size,
 		struct sockaddr_in *addr) {
-	int addrLen = sizeof(sockaddr_in);
+	unsigned int addrLen = sizeof(sockaddr_in);
 	return ::recvfrom(this->sock_fd, buf, size, 0, (struct sockaddr*) addr,
 			&addrLen);
 }

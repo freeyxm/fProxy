@@ -11,6 +11,9 @@
 #include <string>
 #include <cstring>
 #include <algorithm>
+#if __linux__
+#include <sys/socket.h>
+#endif
 
 namespace freeyxm {
 
@@ -450,7 +453,7 @@ s5_method_t FP_Socks5::dealRequestBind(FSocketTcp *socket,
 		}
 		{
 			sockaddr_in addr;
-			int addr_len = sizeof(addr);
+			unsigned int addr_len = sizeof(addr);
 			ret = ::getsockname(bind_socket.getSocketHandle(),
 					(struct sockaddr*) &addr, &addr_len);
 			if (ret < 0) {
@@ -554,7 +557,7 @@ s5_method_t FP_Socks5::dealRequestUdp(FSocketTcp *socket,
 		}
 		{
 			sockaddr_in addr;
-			int addr_len = sizeof(addr);
+			unsigned int addr_len = sizeof(addr);
 			ret = ::getsockname(udp_serv_socket.getSocketHandle(),
 					(struct sockaddr*) &addr, &addr_len);
 			if (ret < 0) {

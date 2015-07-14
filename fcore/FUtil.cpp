@@ -9,8 +9,11 @@
 #include <cstdio>
 #include <cstdarg>
 #include <ctime>
+#include <cstring>
 #ifdef __WIN32__
 #include <winbase.h>
+#elif __linux__
+#include <errno.h>
 #endif
 
 namespace freeyxm {

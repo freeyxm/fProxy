@@ -9,6 +9,13 @@
 #include "FThread.h"
 #include <cstring>
 #include <ctime>
+#if __linux__
+#include <unistd.h>
+#include <errno.h>
+#include <netdb.h>
+#include <arpa/inet.h>
+#include <sys/ioctl.h>
+#endif
 
 namespace freeyxm {
 
@@ -146,7 +153,7 @@ int FSocket::setBlockMode(int flag) {
 	}
 #else
 	int mode = flag;
-	if(::ioctl(this->sock_fd,FIONBIO,&mode)) {
+	if (::ioctl(this->sock_fd, FIONBIO, &mode)) {
 		return -1;
 	}
 #endif

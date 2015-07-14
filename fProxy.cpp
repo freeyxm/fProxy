@@ -8,6 +8,7 @@
 
 #include <cstdio>
 #include <cstdlib>
+#include <cstring>
 using namespace std;
 
 #include "fcore/FServer.h"
@@ -25,11 +26,13 @@ int main(void) {
 
 	setvbuf(stdout,(char*)NULL,_IOLBF,0);
 
+#if __win32__
 	static WSADATA wsa_data;
 	if (WSAStartup((WORD) (1 << 8 | 1), &wsa_data) != 0) {
 		printf("WSAStartup error!\n");
 		return -1;
 	}
+#endif
 
 	FServer server("",2012,100);
 	server.setProcessFun(serv_process_socket5);
@@ -45,7 +48,7 @@ void serv_process(FSocketTcp *socket) {
 	int ret = socket->recv(buf, 1024);
 	//DEBUG_PRINT("[%d] recv: %s\n", ret, buf);
 
-	sprintf(buf, "hello, my socket handle is %d.\0", socket->getSocketHandle());
+	sprintf(buf, "hello, my socket handle is %d.", socket->getSocketHandle());
 	ret = socket->send(buf, strlen(buf));
 	//DEBUG_PRINT("send ret: %d\n", ret);
 
@@ -65,7 +68,7 @@ void serv_process2(FSocketTcp *socket) {
 	}
 	printf("\n");
 
-	printf("sizeof short = %d\n", sizeof(short));
+	printf("sizeof short = %ld\n", sizeof(short));
 
 	DEBUG_PRINT(1, "vn: %d\n", (int) *p);
 	DEBUG_PRINT(1, "cd: %d\n", (int) *(p + 1));
