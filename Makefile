@@ -1,10 +1,11 @@
-CXX = g++
-OBJS = 
 INCLUDES = -I"."
 #LIBS = -L./fprotocol -lfprotocol -L./fcore/ -lfcore -lpthreadGC2 -lwsock32 #-lws2_32
 LIBS = -L./fprotocol -lfprotocol -L./fcore/ -lfcore -lpthread
-CXXFLAGS = -g -O0 -Wall -fmessage-length=0 $(INCLUDES) -D_DEBUG_ -D_LOG_MUTEX_ #-D__WIN32__
+MACROS = -D_DEBUG_ -D_LOG_MUTEX_ #-D__WIN32__
+CXX = g++
+CXXFLAGS = -g -O0 -Wall -fmessage-length=0 $(INCLUDES) $(MACROS)
 LDFLAGS = $(LIBS) #-mwindows
+OBJS = 
 
 TARGET = fProxy.exe fClient.exe test.exe
 
@@ -15,7 +16,13 @@ flibs:
 	cd fcore && make
 	cd fprotocol && make
 
-%.exe: %.o $(OBJS)
+fProxy.exe: fProxy.o fcore/libfcore.a fprotocol/libfprotocol.a
+	$(CXX) -o $@ fProxy.o $(LDFLAGS)
+
+fClient.exe: fClient.o fcore/libfcore.a fprotocol/libfprotocol.a
+	$(CXX) -o $@ fClient.o $(LDFLAGS)
+
+test.exe: test.o $(OBJS)
 	$(CXX) -o $@ $^ $(LDFLAGS)
 
 .PHONY: clean

@@ -1,15 +1,23 @@
-OBJS = FSocket.o FSocketTcp.o FSocketUdp.o FServer.o FThread.o FUtil.o FLogger.o FPmTest.o FString.o
+INCLUDES = 
 #LIBS = -lpthreadGC2 -lwsock32 -lws2_32
+MACROS = -D_DEBUG_ -D_LOG_MUTEX_ #-D__WIN32__
 CXX = g++
-CXXFLAGS = -g -O0 -Wall -fmessage-length=0 -D_DEBUG_ -D_LOG_MUTEX_ #-D__WIN32__ 
-LDFLAGS = 
+CXXFLAGS = -g -O0 -Wall -fmessage-length=0 $(INCLUDES) $(MACROS)
+LDFLAGS =
+OBJS = FSocket.o FSocketTcp.o FSocketUdp.o FServer.o FThread.o FUtil.o FLogger.o FPmTest.o FString.o
+SRCS = ${OBJS:%.o=%.cpp}
 
 TARGET = libfcore.a
 
-all: $(TARGET)
+all: depend $(TARGET)
+
+depend:
+	$(CXX) $(INCLUDES) -MM $(SRCS) > .depend
+
+-include .depend
 
 libfcore.a: $(OBJS)
-	ar -rs $@ $^
+	ar -rs $@ $(OBJS)
 
 .PHONY: clean
 clean:
