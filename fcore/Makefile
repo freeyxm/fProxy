@@ -8,6 +8,7 @@ OBJS = FSocket.o FSocketTcp.o FSocketUdp.o FServer.o FThread.o FUtil.o FLogger.o
 SRCS = ${OBJS:%.o=%.cpp}
 
 TARGET = libfcore.a
+OUT_DIR = ../libs
 
 all: depend $(TARGET)
 
@@ -17,12 +18,12 @@ depend:
 -include .depend
 
 libfcore.a: $(OBJS)
-	ar -rs $@ $(OBJS)
+	ar -rs "$(OUT_DIR)/$(TARGET)" $(OBJS)
 
 .PHONY: clean
 clean:
-	rm -rf $(OBJS) $(TARGET)
+	rm -rf $(OBJS) "$(OUT_DIR)/$(TARGET)"
 
 .PHONY: clean_win32
 clean_win32:
-	del /F/Q $(OBJS) $(TARGET)
+	del /F/Q $(OBJS) "$(OUT_DIR)/$(TARGET)"
