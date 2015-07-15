@@ -69,11 +69,11 @@ int FP_Socks5::dealValidate(FSocketTcp *socket) {
 	}
 
 	DEBUG_PRINT_LOCK();
-	DEBUG_PRINT(0, "ver:%d, nMethods: %d, methods:", s5_method.ver, s5_method.nMethods);
+	DEBUG_PRINT("ver:%d, nMethods: %d, methods:", s5_method.ver, s5_method.nMethods);
 #ifdef _DEBUG_
 	FUtil::print_hex(stdout,(unsigned char*) s5_method.methods,s5_method.nMethods,0);
 #endif
-	DEBUG_PRINT(0, "\n");
+	DEBUG_PRINT("\n");
 	DEBUG_PRINT_UNLOCK();
 
 	s5_method.ver = S5_VERSION;
@@ -143,7 +143,7 @@ int FP_Socks5::validate(int method, FSocketTcp *socket) {
 			string username((char*) s5_up.username, s5_up.ulen);
 			string password((char*) s5_up.p_password, *s5_up.p_plen);
 
-			DEBUG_PRINT(1, "username: %s, password: %s\n", username.c_str(), password.c_str());
+			DEBUG_MPRINT("username: %s, password: %s\n", username.c_str(), password.c_str());
 
 			// validate username/password ...
 			if (!validateUserPass(username, password)) {
@@ -198,11 +198,11 @@ int FP_Socks5::dealRequest(FSocketTcp *socket) {
 	}
 
 	DEBUG_PRINT_LOCK();
-	DEBUG_PRINT(0, "request: ");
+	DEBUG_PRINT("request: ");
 #ifdef _DEBUG_
 	FUtil::print_hex(stdout,(unsigned char*)&s5_request,ret,0);
 #endif
-	DEBUG_PRINT(0, "\n");
+	DEBUG_PRINT("\n");
 	DEBUG_PRINT_UNLOCK();
 
 	::memset(&s5_reply, 0, sizeof(s5_reply));
@@ -291,7 +291,7 @@ s5_method_t FP_Socks5::parseAddrPort(fp_socks5_request_t *s5_request, const int 
 	// parse dst_port:
 	dst_port = this->ntohs(s5_request->p_port);
 
-	DEBUG_PRINT(1, "request: addr: %s, port: %u\n", dst_addr.c_str(), dst_port);
+	DEBUG_MPRINT("request: addr: %s, port: %u\n", dst_addr.c_str(), dst_port);
 
 	return rep;
 }
@@ -344,7 +344,7 @@ s5_method_t FP_Socks5::parseAddrPort(fp_socks5_udp_t *s5_udp, int &udp_size, str
 	// parse dst_port:
 	dst_port = this->ntohs(s5_udp->p_port);
 
-	DEBUG_PRINT(1, "request: addr: %s, port: %u\n", dst_addr.c_str(), dst_port);
+	DEBUG_MPRINT("request: addr: %s, port: %u\n", dst_addr.c_str(), dst_port);
 
 	return rep;
 }
@@ -470,7 +470,7 @@ s5_method_t FP_Socks5::dealRequestBind(FSocketTcp *socket, const fp_socks5_reque
 			// check addr == dst_addr:
 			string req_addr = FSocket::inet_ntoa(bind_socket.getRemoteAddress().sin_addr);
 			if (req_addr != dst_addr) {
-				DEBUG_PRINT_T(1, "addr validate failed, dst_addr: %s, req_addr: %s.\n", dst_addr.c_str(), req_addr.c_str());
+				DEBUG_MPRINT("addr validate failed, dst_addr: %s, req_addr: %s.\n", dst_addr.c_str(), req_addr.c_str());
 				delete server_socket; // auto close().
 				continue;
 			}
@@ -617,7 +617,7 @@ s5_method_t FP_Socks5::dealRequestUdp(FSocketTcp *socket, const fp_socks5_reques
 					break;
 				}
 
-				DEBUG_PRINT(1, "client, nrecv= %d, sendto= %s:%u\n", nrecv, dst_addr.c_str(), dst_port);
+				DEBUG_MPRINT("client, nrecv= %d, sendto= %s:%u\n", nrecv, dst_addr.c_str(), dst_port);
 			} while (0);
 			if (ret) {
 				break;
@@ -626,7 +626,7 @@ s5_method_t FP_Socks5::dealRequestUdp(FSocketTcp *socket, const fp_socks5_reques
 		} // end if
 		if (select_ret && FD_ISSET(udp_sid, &r_fds)) {
 			nrecv = udp_socket.recvFrom((char*) &s5_udp, S5_MAX_UDP_SIZE, NULL);
-			DEBUG_PRINT(1, "server, nrecv= %d\n", nrecv);
+			DEBUG_MPRINT("server, nrecv= %d\n", nrecv);
 			if (nrecv < 0) {
 				DEBUG_PRINTLN_ERR("recvfrom error", udp_socket.getErrCode(), udp_socket.getErrStr().c_str());
 				break;

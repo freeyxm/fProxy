@@ -7,9 +7,6 @@
 
 #include "FLogger.h"
 
-#include <cstdarg>
-#include <ctime>
-
 namespace freeyxm {
 
 pthread_mutex_t FLogger::log_mutex = PTHREAD_MUTEX_INITIALIZER;
@@ -37,7 +34,12 @@ void FLogger::log_t(const char *fmt, ...) {
 	va_list argptr;
 	va_start(argptr, fmt);
 
-	fprintf(out_stream, "[%ld] ", time(NULL));
+	char str[20];
+	time_t lt = time(NULL);
+	struct tm *ptm = localtime(&lt);
+	strftime(str, sizeof(str), "%F %T", ptm);
+
+	fprintf(out_stream, "[%s] ", str);
 	vfprintf(out_stream, fmt, argptr);
 	fflush(out_stream);
 
@@ -47,34 +49,31 @@ void FLogger::log_t(const char *fmt, ...) {
 void FLogger::mlog(const char *fmt, ...) {
 	va_list argptr;
 	va_start(argptr, fmt);
-	pthread_mutex_lock(&log_mutex);
+	log_lock();
 
 	vfprintf(out_stream, fmt, argptr);
 	fflush(out_stream);
 
-	pthread_mutex_unlock(&log_mutex);
+	log_unlock();
 	va_end(argptr);
 }
 
 void FLogger::mlog_t(const char *fmt, ...) {
 	va_list argptr;
 	va_start(argptr, fmt);
-	pthread_mutex_lock(&log_mutex);
+	log_lock();
 
-	fprintf(out_stream, "[%ld] ", time(NULL));
+	char str[20];
+	time_t lt = time(NULL);
+	struct tm *ptm = localtime(&lt);
+	strftime(str, sizeof(str), "%F %T", ptm);
+
+	fprintf(out_stream, "[%s] ", str);
 	vfprintf(out_stream, fmt, argptr);
 	fflush(out_stream);
 
-	pthread_mutex_unlock(&log_mutex);
+	log_unlock();
 	va_end(argptr);
-}
-
-void FLogger::log_lock() {
-	pthread_mutex_lock(&log_mutex);
-}
-
-void FLogger::log_unlock() {
-	pthread_mutex_unlock(&log_mutex);
 }
 
 } /* namespace freeyxm */

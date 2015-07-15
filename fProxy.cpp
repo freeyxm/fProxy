@@ -57,10 +57,10 @@ void serv_process(FSocketTcp *socket) {
 }
 
 void serv_process2(FSocketTcp *socket) {
-	DEBUG_PRINT(1, "in serv_process ...\n");
+	DEBUG_MPRINT("in serv_process ...\n");
 	char buf[1024];
 	int ret = socket->recv(buf, 1024);
-	DEBUG_PRINT(1, "recv ret: %d\n", ret);
+	DEBUG_MPRINT("recv ret: %d\n", ret);
 	char *p = buf;
 
 	for (int i = 0; i < 20; ++i) {
@@ -70,10 +70,10 @@ void serv_process2(FSocketTcp *socket) {
 
 	printf("sizeof short = %ld\n", sizeof(short));
 
-	DEBUG_PRINT(1, "vn: %d\n", (int) *p);
-	DEBUG_PRINT(1, "cd: %d\n", (int) *(p + 1));
-	DEBUG_PRINT(1, "port: %d\n", (short*) (p + 2));
-	DEBUG_PRINT(1, "port: %02x%02x\n", (int) *(p + 2), (int) *(p + 3));
+	DEBUG_MPRINT("vn: %d\n", (int) *p);
+	DEBUG_MPRINT("cd: %d\n", (int) *(p + 1));
+	DEBUG_MPRINT("port: %d\n", *(short*) (p + 2));
+	DEBUG_MPRINT("port: %02x%02x\n", (int) *(p + 2), (int) *(p + 3));
 
 	//sprintf(buf, "hello, my socket handle is %d.\0", socket->getSocketHandle());
 	//ret = socket->send(buf, strlen(buf));

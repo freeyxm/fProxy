@@ -41,22 +41,21 @@ FServer::~FServer() {
 
 int FServer::init() {
 	if (!this->funHandle) {
-		DEBUG_PRINTLN_MSG("process function handle uninitialized!"
-				" Please call setProcessFun first to init it!");
+		LOG_PRINTLN_MSG("process function handle uninitialized! Please call setProcessFun first to init it!");
 		return -1;
 	}
 	if (setSignal()) {
-		DEBUG_PRINTLN_MSG("set signal error!");
+		LOG_PRINTLN_MSG("set signal error!");
 		return -1;
 	}
 	if (max_conn_num > 0) {
 		p_max_conn_num_sem = (sem_t*) malloc(sizeof(sem_t));
 		if (!p_max_conn_num_sem) {
-			DEBUG_PRINTLN_MSG("malloc <p_max_conn_num_sem> error!");
+			LOG_PRINTLN_FL("malloc error!");
 			return -1;
 		}
 		if (::sem_init(p_max_conn_num_sem, 0, max_conn_num) < 0) {
-			DEBUG_PRINTLN_MSG("sem_init error!");
+			LOG_PRINTLN_MSG("sem_init error!");
 			return -1;
 		}
 	}
@@ -114,21 +113,21 @@ int FServer::getMaxConnNum() {
 
 int FServer::run() {
 	if (init()) {
-		DEBUG_PRINTLN_MSG("server init failed!");
+		LOG_PRINTLN_MSG("server init failed!");
 		return -1;
 	}
 	int ret = server_socket.bind(this->addr.empty() ? NULL : this->addr.c_str(), this->port);
 	if (ret < 0) {
-		DEBUG_PRINTLN_ERR("server bind error", server_socket.getErrCode(), server_socket.getErrStr().c_str());
+		LOG_PRINTLN_ERR("server bind error", server_socket.getErrCode(), server_socket.getErrStr().c_str());
 		return ret;
 	}
 	ret = server_socket.listen(listen_queue_len);
 	if (ret < 0) {
-		DEBUG_PRINTLN_ERR("server listen error", server_socket.getErrCode(), server_socket.getErrStr().c_str());
+		LOG_PRINTLN_ERR("server listen error", server_socket.getErrCode(), server_socket.getErrStr().c_str());
 		return ret;
 	}
 
-	DEBUG_PRINT_T(1, "server listening on %s:%d ...\n", this->addr.empty() ? "*" : this->addr.c_str(), this->port);
+	DEBUG_MPRINT("server listening on %s:%d ...\n", this->addr.empty() ? "*" : this->addr.c_str(), this->port);
 
 	ret = this->loop();
 
@@ -142,13 +141,13 @@ int FServer::loop() {
 	stopped = 0;
 	while (!stopped) {
 		if (p_max_conn_num_sem && ::sem_wait(p_max_conn_num_sem) < 0) {
-			DEBUG_PRINTLN_MSG("sem_wait error!");
+			LOG_PRINTLN_MSG("sem_wait error!");
 			break;
 		}
 		//DEBUG_PRINTLN_MSG("waitting for connection ...");
 		FSocketTcp *socket = server_socket.accept();
 		if (socket) {
-			//DEBUG_PRINT_T(1, "accept a connection, sid: %d.\n", socket->getSocketHandle());
+			//DEBUG_MPRINT("accept a connection, sid: %d.\n", socket->getSocketHandle());
 			if (this->process(socket)) {
 				return -1;
 			}
@@ -157,7 +156,7 @@ int FServer::loop() {
 			if (errcode == EINTR) {
 				continue;
 			}
-			DEBUG_PRINTLN_ERR("server accept error", server_socket.getErrCode(), server_socket.getErrStr().c_str());
+			LOG_PRINTLN_ERR("server accept error", server_socket.getErrCode(), server_socket.getErrStr().c_str());
 			return -1;
 		}
 	}
@@ -168,7 +167,7 @@ int FServer::process(FSocketTcp *p_socket) {
 	// ---
 	fs_tp_param_t *tp_param = (fs_tp_param_t*) ::malloc(sizeof(fs_tp_param_t));
 	if (!tp_param) {
-		DEBUG_PRINTLN_MSG("malloc error!");
+		LOG_PRINTLN_FL("malloc error!");
 		return -1;
 	}
 	tp_param->p_sem = this->p_max_conn_num_sem;
@@ -179,7 +178,7 @@ int FServer::process(FSocketTcp *p_socket) {
 	FThread thread(&funparam);
 	int ret = thread.start();
 	if (ret) {
-		DEBUG_PRINT_T(1, "thread create error, sid: %d, ret: %d.\n", p_socket->getSocketHandle(), ret);
+		DEBUG_MPRINT("thread create error, sid: %d, ret: %d.\n", p_socket->getSocketHandle(), ret);
 		free(tp_param); // !!!
 		return -1;
 	} else {
@@ -203,7 +202,7 @@ void FServer::thread_proxy(void *param) {
 		(*tp_param->funparam.handle)(tp_param->funparam.param);
 		if (tp_param->p_sem) {
 			if (::sem_post(tp_param->p_sem) < 0) {
-				DEBUG_PRINTLN_MSG("sem_post error!");
+				LOG_PRINTLN_MSG("sem_post error!");
 			}
 		}
 	} while (0);
