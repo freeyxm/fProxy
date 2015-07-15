@@ -6,8 +6,8 @@
  */
 
 #include "FServer.h"
-#include "FUtil.h"
-#include "FThread.h"
+#include "fcore/FUtil.h"
+#include "fcore/FThread.h"
 #include <signal.h>
 #include <cstdlib>
 #if __linux__

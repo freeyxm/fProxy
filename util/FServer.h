@@ -8,7 +8,7 @@
 #ifndef FSERVER_H_
 #define FSERVER_H_
 
-#include "FSocketTcp.h"
+#include "fcore/FSocketTcp.h"
 #include <string>
 #include <semaphore.h>
 

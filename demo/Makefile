@@ -6,21 +6,21 @@ MACROS = -D_DEBUG_ -D_LOG_MUTEX_ #-D__WIN32__
 CXX = g++
 CXXFLAGS = -g -O0 -Wall -fmessage-length=0 $(INCLUDES) $(MACROS)
 LDFLAGS = $(LIBS) #-mwindows
-OBJS = 
+OBJS = ../util/FServer.o
 
 TARGET = fProxy.exe fClient.exe test.exe
 
 
 all: $(TARGET) 
 
-fProxy.exe: fProxy.o $(LIB_DIR)/libfcore.a $(LIB_DIR)/libfprotocol.a
-	$(CXX) -o $@ fProxy.o $(LDFLAGS)
+fProxy.exe: fProxy.o $(OBJS) $(LIB_DIR)/libfcore.a $(LIB_DIR)/libfprotocol.a
+	$(CXX) -o $@ fProxy.o $(OBJS) $(LDFLAGS)
 
-fClient.exe: fClient.o $(LIB_DIR)/libfcore.a $(LIB_DIR)/libfprotocol.a
-	$(CXX) -o $@ fClient.o $(LDFLAGS)
+fClient.exe: fClient.o $(OBJS) $(LIB_DIR)/libfcore.a $(LIB_DIR)/libfprotocol.a
+	$(CXX) -o $@ fClient.o $(OBJS) $(LDFLAGS)
 
-test.exe: test.o $(OBJS)
-	$(CXX) -o $@ $^ $(LDFLAGS)
+test.exe: test.o $(OBJS) $(LIB_DIR)/libfcore.a $(LIB_DIR)/libfprotocol.a
+	$(CXX) -o $@ test.o $(OBJS) $(LDFLAGS)
 
 .PHONY: clean
 clean:

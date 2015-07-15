@@ -11,7 +11,7 @@
 #include <cstring>
 using namespace std;
 
-#include "fcore/FServer.h"
+#include "util/FServer.h"
 #include "fcore/FUtil.h"
 #include "fprotocol/FPSocks5.h"
 #include "fprotocol/FPHttp.h"
