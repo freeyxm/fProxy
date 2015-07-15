@@ -8,6 +8,7 @@
 #ifndef FCORE_H_
 #define FCORE_H_
 
+#include "FLogger.h"
 #include "FUtil.h"
 #include "FThread.h"
 #include "FSocket.h"

@@ -18,10 +18,6 @@
 
 namespace freeyxm {
 
-#ifdef _DEBUG_MUTEX_
-pthread_mutex_t debug_out_mutex = PTHREAD_MUTEX_INITIALIZER;
-#endif
-
 FUtil::FUtil() {
 	// TODO Auto-generated constructor stub
 }

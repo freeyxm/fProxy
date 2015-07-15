@@ -3,7 +3,7 @@ OBJS =
 INCLUDES = -I"."
 #LIBS = -L./fprotocol -lfprotocol -L./fcore/ -lfcore -lpthreadGC2 -lwsock32 #-lws2_32
 LIBS = -L./fprotocol -lfprotocol -L./fcore/ -lfcore -lpthread
-CXXFLAGS = -g -O0 -Wall -fmessage-length=0 $(INCLUDES) -D_DEBUG_ -D_DEBUG_MUTEX_ #-D__WIN32__
+CXXFLAGS = -g -O0 -Wall -fmessage-length=0 $(INCLUDES) -D_DEBUG_ -D_LOG_MUTEX_ #-D__WIN32__
 LDFLAGS = $(LIBS) #-mwindows
 
 TARGET = fProxy.exe fClient.exe test.exe
