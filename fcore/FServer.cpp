@@ -178,7 +178,7 @@ int FServer::process(FSocketTcp *p_socket) {
 	FThread thread(&funparam);
 	int ret = thread.start();
 	if (ret) {
-		DEBUG_MPRINT("thread create error, sid: %d, ret: %d.\n", p_socket->getSocketHandle(), ret);
+		DEBUG_MPRINT("thread create error, sid: %d, ret: %d.\n", p_socket->getHandle(), ret);
 		free(tp_param); // !!!
 		return -1;
 	} else {

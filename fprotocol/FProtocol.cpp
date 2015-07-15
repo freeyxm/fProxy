@@ -110,8 +110,8 @@ int FProtocol::onceRecvAndSend(FSocketTcp *recv_socket, FSocketTcp *send_socket,
 }
 
 int FProtocol::loopRecvAndSend(FSocketTcp *socket1, FSocketTcp *socket2) {
-	int c_sid = socket1->getSocketHandle();
-	int s_sid = socket2->getSocketHandle();
+	int c_sid = socket1->getHandle();
+	int s_sid = socket2->getHandle();
 	fd_set r_fds;
 	int nfds = c_sid > s_sid ? c_sid + 1 : s_sid + 1;
 	int select_ret;

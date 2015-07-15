@@ -55,11 +55,11 @@ int FSocketTcp::sendAll(const char *buf, const size_t size) {
 		// need to limit the size per send ???
 		nsend = ::send(this->sock_fd, buf + ntotal, size - ntotal, 0);
 		if (nsend < 0) {
-			return -1;
+			return ntotal;
 		}
 		ntotal += nsend;
 	}
-	return 0;
+	return ntotal;
 }
 
 int FSocketTcp::readLine(string &line, const string line_delimiter) {
@@ -67,7 +67,7 @@ int FSocketTcp::readLine(string &line, const string line_delimiter) {
 	char ch;
 	int ret;
 	int ld_index = 0;
-	while (1) {
+	while (true) {
 		ret = ::recv(this->sock_fd, &ch, 1, 0);
 		if (ret < 0) {
 			return -1;

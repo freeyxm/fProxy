@@ -67,7 +67,7 @@ void conenctServr(void*) {
 			break;
 		} else {
 			char buf[1024];
-			sprintf(buf, "hello, my socket handle is %d.", socket.getSocketHandle());
+			sprintf(buf, "hello, my socket handle is %d.", socket.getHandle());
 			ret = socket.send(buf, strlen(buf));
 			//DEBUG_PRINT("send ret: %d\n", ret);
 

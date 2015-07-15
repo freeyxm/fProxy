@@ -17,7 +17,7 @@ public:
 	FSocketUdp(int sin_family = AF_INET);
 	virtual ~FSocketUdp();
 
-	int createSocketUdp();
+	int createSocket();
 
 	int recvFrom(char *buf, const size_t size, struct sockaddr_in *addr);
 	int sendTo(const char *buf, const size_t size, const struct sockaddr_in *addr);

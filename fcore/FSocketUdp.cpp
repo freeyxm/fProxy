@@ -20,7 +20,7 @@ FSocketUdp::~FSocketUdp() {
 	// TODO Auto-generated destructor stub
 }
 
-int FSocketUdp::createSocketUdp() {
+int FSocketUdp::createSocket() {
 	return FSocket::createSocket();
 }
 

@@ -428,7 +428,7 @@ s5_method_t FP_Socks5::dealRequestBind(FSocketTcp *socket, const fp_socks5_reque
 		{
 			sockaddr_in addr;
 			unsigned int addr_len = sizeof(addr);
-			ret = ::getsockname(bind_socket.getSocketHandle(), (struct sockaddr*) &addr, &addr_len);
+			ret = ::getsockname(bind_socket.getHandle(), (struct sockaddr*) &addr, &addr_len);
 			if (ret < 0) {
 				DEBUG_PRINTLN_ERR("getsockname error", FUtil::getErrCode(), FUtil::getErrStr().c_str());
 				return S5_REP_FAILURE;
@@ -519,14 +519,14 @@ s5_method_t FP_Socks5::dealRequestUdp(FSocketTcp *socket, const fp_socks5_reques
 		{
 			sockaddr_in addr;
 			unsigned int addr_len = sizeof(addr);
-			ret = ::getsockname(udp_serv_socket.getSocketHandle(), (struct sockaddr*) &addr, &addr_len);
+			ret = ::getsockname(udp_serv_socket.getHandle(), (struct sockaddr*) &addr, &addr_len);
 			if (ret < 0) {
 				DEBUG_PRINTLN_ERR("getsockname error", FUtil::getErrCode(), FUtil::getErrStr().c_str());
 				return S5_REP_FAILURE;
 			}
 			udp_serv_socket.setLocalAddress(addr);
 		}
-		if (udp_socket.createSocketUdp()) {
+		if (udp_socket.createSocket()) {
 			DEBUG_PRINTLN_ERR("socket error", udp_serv_socket.getErrCode(), udp_serv_socket.getErrStr().c_str());
 			return S5_REP_FAILURE;
 		}
@@ -561,9 +561,9 @@ s5_method_t FP_Socks5::dealRequestUdp(FSocketTcp *socket, const fp_socks5_reques
 	unsigned int dst_port = 0;
 	int nrecv, select_ret;
 
-	int udp_serv_sid = udp_serv_socket.getSocketHandle();
-	int udp_sid = udp_socket.getSocketHandle();
-	int tcp_sid = socket->getSocketHandle();
+	int udp_serv_sid = udp_serv_socket.getHandle();
+	int udp_sid = udp_socket.getHandle();
+	int tcp_sid = socket->getHandle();
 	fd_set r_fds;
 	int nfds = udp_serv_sid > udp_sid ? udp_serv_sid + 1 : udp_sid + 1;
 	nfds = nfds > tcp_sid ? nfds : tcp_sid + 1;

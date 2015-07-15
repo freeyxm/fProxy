@@ -35,23 +35,24 @@ public:
 	virtual int connect(const char *host, const unsigned int port);
 	virtual void close();
 
-	int getSocketHandle();
-	int getErrCode();
-	string getErrStr();
+	int getHandle();
 
 	int setBlockMode(int flag);
+
+	int setTimeout(bool send_flag, int sec, long usec = 0);
 
 	sockaddr_in getRemoteAddress();
 	sockaddr_in getLocalAddress();
 	void setRemoteAddress(const sockaddr_in &addr);
 	void setLocalAddress(const sockaddr_in &addr);
 
-	static string inet_ntoa(struct in_addr addr);
-
 	int getSinFamily();
 	void setSinFamily(int sin_family);
 
-	int setSocketTimeout(int send_flag, int time);
+	int getErrCode();
+	string getErrStr();
+
+	static string inet_ntoa(struct in_addr addr);
 
 protected:
 	int createSocket();
