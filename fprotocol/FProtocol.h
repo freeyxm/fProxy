@@ -32,12 +32,14 @@ public:
 
 	virtual int process(FSocketTcp *socket) = 0;
 
-	int ip4_byte2str(const unsigned char *ip_byte, string &ip_str);
-	int ip4_str2byte(const string ip_str, unsigned char *ip_byte);
+	static int ip4_byte2str(const unsigned char *ip_byte, string &ip_str);
+	static int ip4_str2byte(const string ip_str, unsigned char *ip_byte);
 
-	unsigned short ntohs(const unsigned char *p_ns);
-	void htons(const unsigned short hs, char *p_ns);
-	void ntons(const unsigned short ns, char *p_ns);
+	static int ip6_byte2str(const unsigned char *ip_byte, string &ip_str);
+
+	static unsigned short ntohs(const unsigned char *p_ns);
+	static void htons(const unsigned short hs, char *p_ns);
+	static void ntons(const unsigned short ns, char *p_ns);
 
 	static int onceRecvAndSend(FSocketTcp *recv_socket, FSocketTcp *send_socket, char *buf, const int size);
 	static int loopRecvAndSend(FSocketTcp *socket1, FSocketTcp *socket2);

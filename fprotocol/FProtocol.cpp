@@ -28,15 +28,13 @@ FProtocol::~FProtocol() {
 }
 
 int FProtocol::ip4_byte2str(const unsigned char *ip_byte, string &ip_str) {
-	char buf[32];
+	char buf[4];
 	ip_str.clear();
 	for (int i = 0; i < 4; ++i) {
-		sprintf(buf, "%u%c", (unsigned int) ip_byte[i], '\0');
-		if (!i) {
-			ip_str += buf;
-		} else {
-			ip_str.append(".").append(buf);
-		}
+		sprintf(buf, "%u", ip_byte[i]);
+		if (i > 0)
+			ip_str.append(".");
+		ip_str.append(buf);
 	}
 	return 0;
 }
@@ -64,6 +62,23 @@ int FProtocol::ip4_str2byte(const string ip_str, unsigned char *ip_byte) {
 		}
 		ip_byte[i] = ip[i];
 		p1 = p2 + 1;
+	}
+	return 0;
+}
+
+int FProtocol::ip6_byte2str(const unsigned char *ip_byte, string &ip_str)
+{
+	char buf[5];
+	ip_str.clear();
+	for (int i = 0; i < 8; ++i)
+	{
+		for (int k = 0; k < 2; ++k)
+		{
+			sprintf(buf + k * 2, "%02X", ip_byte[i * 8 + k]);
+		}
+		if (i > 0)
+			ip_str.append(":");
+		ip_str.append(buf);
 	}
 	return 0;
 }

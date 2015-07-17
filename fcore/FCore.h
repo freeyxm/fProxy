@@ -12,7 +12,6 @@
 #include "FUtil.h"
 #include "FThread.h"
 #include "FSocket.h"
-#include "FServer.h"
 #include "FPmTest.h"
 
 #endif /* FCORE_H_ */
