@@ -24,12 +24,12 @@ typedef struct {
 	Byte ver;
 	Byte nmethods;
 	Byte methods[255];
-} method_request;
+} method_request_t;
 
 typedef struct {
 	Byte ver;
 	Byte method;
-} method_reply;
+} method_reply_t;
 
 typedef struct {
 	Byte ver;
@@ -37,30 +37,39 @@ typedef struct {
 	Byte username[255];
 	Byte plen;
 	Byte password[255];
-} method_unpw_request;
+} method_unpw_request_t;
 
 typedef struct {
 	Byte ver;
 	Byte status;
-} method_unpw_reply;
+} method_unpw_reply_t;
+
+typedef struct {
+	Byte atyp;
+	Byte addr[256];
+	Byte port[2];
+} address_t;
+
+class Address {
+public:
+	Byte atyp;
+	string addr;
+	int port;
+};
 
 typedef struct {
 	Byte ver;
 	Byte cmd;
 	Byte rsv;
-	Byte atyp;
-	Byte addr[256];
-	Byte port[2];
-} request_detail;
+	address_t address;
+} request_detail_t;
 
 typedef struct {
 	Byte ver;
 	Byte rep;
 	Byte rsv;
-	Byte atyp;
-	Byte addr[256];
-	Byte port[2];
-} request_reply;
+	address_t address;
+} request_reply_t;
 
 //====================================================================
 struct Method {
@@ -137,22 +146,22 @@ public:
 	int run();
 
 protected:
-	int method_select();
-	int method_select(const method_request& request);
+	int methodSelect();
+	int methodSelect(const method_request_t& request);
 
 	int auth();
-	int auth_unpw();
-	int auth_unpw(const method_unpw_request& request);
+	int authUnPw();
+	int authUnPw(const method_unpw_request_t& request);
 
-	int do_request();
-	int do_request(const request_detail& request, int nrecv);
-	int do_request_connect(int atyp, const string& addr, int port);
-	int do_request_bind(int atyp, const string& addr, int port);
-	int do_request_udp_associate(int atyp, const string& addr, int port);
+	int doRequest();
+	int doRequest(const request_detail_t& request, int nrecv);
+	int doRequestConnect(const Address &address);
+	int doRequestBind(const Address &address);
+	int doRequestUdpAssociate(const Address &address);
 
-	int send_reply(const request_reply& reply, unsigned int size);
+	int sendReply(const request_reply_t& reply, unsigned int size);
 
-	int parseAddrPort(const request_detail& request, int nrecv, string& addr, int &port);
+	int parseAddrPort(const address_t& in_address, int nrecv, Address& out_address);
 
 	void close();
 

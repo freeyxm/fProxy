@@ -31,7 +31,7 @@ void FP_Socks5_2::initMethods()
 	m_methodNum = 1; // ...
 	m_pMethods = new method_info[m_methodNum];
 	m_pMethods[0].method = Method::METHOD_UN_PW;
-	m_pMethods[0].fun = &FP_Socks5_2::auth_unpw;
+	m_pMethods[0].fun = &FP_Socks5_2::authUnPw;
 }
 
 int FP_Socks5_2::run()
@@ -45,7 +45,7 @@ int FP_Socks5_2::run()
 		{
 			case State_Select_Method:
 			{
-				ret = method_select();
+				ret = methodSelect();
 				if (ret == 0)
 					m_state = State_Auth;
 				else
@@ -63,7 +63,7 @@ int FP_Socks5_2::run()
 				break;
 			case State_Request:
 			{
-				ret = do_request();
+				ret = doRequest();
 				// ...
 			}
 				break;
@@ -91,9 +91,9 @@ void FP_Socks5_2::close()
 	}
 }
 
-int FP_Socks5_2::method_select()
+int FP_Socks5_2::methodSelect()
 {
-	method_request request;
+	method_request_t request;
 	int nrecv = m_pSocket->recv((char*) &request, sizeof(request));
 	if (nrecv < 0)
 	{
@@ -112,9 +112,9 @@ int FP_Socks5_2::method_select()
 		return -1;
 	}
 
-	method_reply reply;
+	method_reply_t reply;
 	reply.ver = S5_VERSION;
-	reply.method = method_select(request);
+	reply.method = methodSelect(request);
 	m_method = reply.method;
 
 	int nsend = m_pSocket->send((const char*) &reply, sizeof(reply));
@@ -127,7 +127,7 @@ int FP_Socks5_2::method_select()
 	return reply.method == Method::METHOD_WRONG ? 1 : 0;
 }
 
-int FP_Socks5_2::method_select(const method_request& request)
+int FP_Socks5_2::methodSelect(const method_request_t& request)
 {
 	for (int i = 0; i < m_methodNum; ++i)
 	{
@@ -146,15 +146,15 @@ int FP_Socks5_2::auth()
 	switch (m_method)
 	{
 		case Method::METHOD_UN_PW:
-			return auth_unpw();
+			return authUnPw();
 		default:
 			return -1;
 	}
 }
 
-int FP_Socks5_2::auth_unpw()
+int FP_Socks5_2::authUnPw()
 {
-	method_unpw_request request;
+	method_unpw_request_t request;
 	int nrecv = m_pSocket->recv((char*) &request, sizeof(request));
 	if (nrecv < 0)
 	{
@@ -173,9 +173,9 @@ int FP_Socks5_2::auth_unpw()
 		return -1;
 	}
 
-	method_unpw_reply reply;
+	method_unpw_reply_t reply;
 	reply.ver = S5_SUB_NEGOTIATION_VER;
-	reply.status = auth_unpw(request);
+	reply.status = authUnPw(request);
 
 	int nsend = m_pSocket->send((const char*) &reply, sizeof(reply));
 	if (nsend < 0 || nsend != sizeof(reply))
@@ -187,7 +187,7 @@ int FP_Socks5_2::auth_unpw()
 	return reply.status;
 }
 
-int FP_Socks5_2::auth_unpw(const method_unpw_request &request)
+int FP_Socks5_2::authUnPw(const method_unpw_request_t &request)
 {
 	static char username[] = "aka"; // ...
 	static char password[] = "justme"; // ...
@@ -200,9 +200,9 @@ int FP_Socks5_2::auth_unpw(const method_unpw_request &request)
 	return pass ? 0 : -1;
 }
 
-int FP_Socks5_2::do_request()
+int FP_Socks5_2::doRequest()
 {
-	request_detail request;
+	request_detail_t request;
 	int nrecv = m_pSocket->recv((char*) &request, sizeof(request));
 	if (nrecv < 0)
 	{
@@ -221,34 +221,33 @@ int FP_Socks5_2::do_request()
 		return -1;
 	}
 
-	return do_request(request, nrecv);
+	return doRequest(request, nrecv);
 }
 
-int FP_Socks5_2::do_request(const request_detail& request, int nrecv)
+int FP_Socks5_2::doRequest(const request_detail_t& request, int nrecv)
 {
-	string addr;
-	int port;
-	int ret = parseAddrPort(request, nrecv, addr, port);
+	Address address;
+	int ret = parseAddrPort(request.address, nrecv - (sizeof(request) - sizeof(request.address)), address);
 	if (ret != ReplyCode::REPLY_SUCCESS)
 	{
-		request_reply reply;
+		request_reply_t reply;
 		reply.ver = S5_VERSION;
 		reply.rep = ret;
 		reply.rsv = S5_RESERVE;
-		send_reply(reply, 3);
+		sendReply(reply, 3);
 		return -1;
 	}
 
 	switch (request.cmd)
 	{
 		case CmdType::CMD_CONNECT:
-			return do_request_connect(request.atyp, addr, port);
+			return doRequestConnect(address);
 			break;
 		case CmdType::CMD_BIND:
-			return do_request_bind(request.atyp, addr, port);
+			return doRequestBind(address);
 			break;
 		case CmdType::CMD_UDP_ASSOCIATE:
-			return do_request_udp_associate(request.atyp, addr, port);
+			return doRequestUdpAssociate(address);
 			break;
 		default:
 			DEBUG_PRINTLN_MSG("Bad request: request_detail cmd illegal!")
@@ -257,22 +256,22 @@ int FP_Socks5_2::do_request(const request_detail& request, int nrecv)
 	}
 }
 
-int FP_Socks5_2::do_request_connect(int atyp, const string& addr, int port)
+int FP_Socks5_2::doRequestConnect(const Address &address)
 {
 	return 0;
 }
 
-int FP_Socks5_2::do_request_bind(int atyp, const string& addr, int port)
+int FP_Socks5_2::doRequestBind(const Address &address)
 {
 	return 0;
 }
 
-int FP_Socks5_2::do_request_udp_associate(int atyp, const string& addr, int port)
+int FP_Socks5_2::doRequestUdpAssociate(const Address &address)
 {
 	return 0;
 }
 
-int FP_Socks5_2::send_reply(const request_reply& reply, unsigned int size)
+int FP_Socks5_2::sendReply(const request_reply_t& reply, unsigned int size)
 {
 	int nsend = m_pSocket->send((const char*) &reply, size);
 	if (nsend < 0 || nsend != (int) size)
@@ -283,39 +282,41 @@ int FP_Socks5_2::send_reply(const request_reply& reply, unsigned int size)
 	return 0;
 }
 
-int FP_Socks5_2::parseAddrPort(const request_detail& request, int nrecv, string& addr, int &port)
+int FP_Socks5_2::parseAddrPort(const address_t& in_address, int nrecv, Address &out_address)
 {
+	out_address.atyp = in_address.atyp;
+	out_address.addr.clear();
+
 	bool len_match = false;
 	int portOffset = 0;
 
-	addr.clear();
-	switch (request.atyp)
+	switch (in_address.atyp)
 	{
 		case AddrType::ADDR_IPV4:
 		{
-			len_match = (nrecv == 10); // 6 + 4
+			len_match = (nrecv == 4);
 			if (!len_match)
 				break;
-			FProtocol::ip4_byte2str(request.addr, addr);
+			FProtocol::ip4_byte2str(in_address.addr, out_address.addr);
 			portOffset = 4;
 		}
 			break;
 		case AddrType::ADDR_DOMAIN_NAME:
 		{
-			Byte len = request.addr[0];
-			len_match = (nrecv == 6 + len);
+			Byte len = in_address.addr[0];
+			len_match = (nrecv == len);
 			if (!len_match)
 				break;
-			addr.append((char*) &request.addr[1], len);
+			out_address.addr.append((char*) &in_address.addr[1], len);
 			portOffset = len + 1;
 		}
 			break;
 		case AddrType::ADDR_IPV6:
 		{
-			len_match = (nrecv == 22); // 6 + 16
+			len_match = (nrecv == 16);
 			if (!len_match)
 				break;
-			FProtocol::ip6_byte2str(request.addr, addr);
+			FProtocol::ip6_byte2str(in_address.addr, out_address.addr);
 			portOffset = 16;
 		}
 			break;
@@ -332,7 +333,7 @@ int FP_Socks5_2::parseAddrPort(const request_detail& request, int nrecv, string&
 		return ReplyCode::REPLY_FAILURE;
 	}
 
-	port = FProtocol::ntohs((unsigned char*) &request.addr + portOffset);
+	out_address.port = FProtocol::ntohs((unsigned char*) &in_address.addr + portOffset);
 
 	return ReplyCode::REPLY_SUCCESS;
 }
