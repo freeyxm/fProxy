@@ -13,6 +13,7 @@
 #include <algorithm>
 #if __linux__
 #include <sys/socket.h>
+#include <arpa/inet.h>
 #endif
 
 namespace freeyxm {
@@ -257,9 +258,7 @@ s5_method_t FP_Socks5::parseAddrPort(fp_socks5_request_t *s5_request, const int 
 			rep = S5_REP_FAILURE; // ...
 			break;
 		}
-		if (this->ip4_byte2str(s5_request->addr_ip4, dst_addr) < 0) {
-			rep = S5_REP_HOST_UNREACHABLE;
-		}
+		this->inet_ntop(AF_INET, s5_request->addr_ip4, dst_addr);
 		s5_request->p_port = s5_request->addr_ip4 + sizeof(s5_request->addr_ip4);
 		break;
 	case S5_ATYP_DOMAIN: {
@@ -307,9 +306,7 @@ s5_method_t FP_Socks5::parseAddrPort(fp_socks5_udp_t *s5_udp, int &udp_size, str
 			break;
 		}
 		udp_size -= 10;
-		if (this->ip4_byte2str(s5_udp->addr_ip4, dst_addr) < 0) {
-			rep = S5_REP_HOST_UNREACHABLE;
-		}
+		this->inet_ntop(AF_INET, s5_udp->addr_ip4, dst_addr);
 		s5_udp->p_port = s5_udp->addr_ip4 + sizeof(s5_udp->addr_ip4);
 		break;
 	case S5_ATYP_DOMAIN: {
@@ -449,7 +446,7 @@ s5_method_t FP_Socks5::dealRequestBind(FSocketTcp *socket, const fp_socks5_reque
 		//<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 		bind_reply.atyp = S5_ATYP_IP4; // chang to support ip6 ... !!!
 		string bind_addr = FSocket::inet_ntoa(bind_socket.getLocalAddress().sin_addr);
-		FProtocol::ip4_str2byte(bind_addr.c_str(), bind_reply.addr_ip4);
+		::inet_pton(AF_INET, bind_addr.c_str(), bind_reply.addr_ip4);
 		FProtocol::ntons(bind_socket.getLocalAddress().sin_port, (char*) bind_reply.addr_ip4 + 4);
 		int nsend = 4 + 4 + 2;
 		//<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
@@ -477,7 +474,7 @@ s5_method_t FP_Socks5::dealRequestBind(FSocketTcp *socket, const fp_socks5_reque
 
 			// second bind reply:
 			//<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
-			FProtocol::ip4_str2byte(bind_addr, bind_reply.addr_ip4); // ... ???
+			::inet_pton(AF_INET, bind_addr.c_str(), bind_reply.addr_ip4); // ... ???
 			unsigned short bind_port = bind_socket.getLocalAddress().sin_port; // ... ???
 			::memcpy(bind_reply.addr_ip4 + 4, &bind_port, 2);
 			nsend = 4 + 4 + 2;
@@ -543,7 +540,7 @@ s5_method_t FP_Socks5::dealRequestUdp(FSocketTcp *socket, const fp_socks5_reques
 		sockaddr_in addr = udp_serv_socket.getLocalAddress();
 		//string bind_addr = FSocket::inet_ntoa(addr.sin_addr); // how to get my ip which connected by client ???
 		string bind_addr = "127.0.0.1";
-		FProtocol::ip4_str2byte(bind_addr.c_str(), bind_reply.addr_ip4);
+		::inet_pton(AF_INET, bind_addr.c_str(), bind_reply.addr_ip4);
 		FProtocol::ntons(addr.sin_port, (char*) bind_reply.p_port);
 	}
 	const int nsend = 4 + 4 + 2;

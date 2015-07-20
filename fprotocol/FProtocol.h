@@ -32,10 +32,7 @@ public:
 
 	virtual int process(FSocketTcp *socket) = 0;
 
-	static int ip4_byte2str(const unsigned char *ip_byte, string &ip_str);
-	static int ip4_str2byte(const string ip_str, unsigned char *ip_byte);
-
-	static int ip6_byte2str(const unsigned char *ip_byte, string &ip_str);
+	static void inet_ntop(int af, const void *cp, string &addr);
 
 	static unsigned short ntohs(const unsigned char *p_ns);
 	static void htons(const unsigned short hs, char *p_ns);

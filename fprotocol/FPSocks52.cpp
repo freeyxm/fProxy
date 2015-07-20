@@ -380,9 +380,7 @@ int FP_Socks5_2::parseAddrPort(const address_t& in_address, int nrecv, Address &
 			len_match = (nrecv == 7); // 1 + 4 + 2
 			if (!len_match)
 				break;
-			char buf[16];
-			::inet_ntop(AF_INET, in_address.addr, buf, sizeof(buf));
-			out_address.addr.append((buf));
+			FProtocol::inet_ntop(AF_INET, in_address.addr, out_address.addr);
 			portOffset = 4;
 		}
 			break;
@@ -401,9 +399,7 @@ int FP_Socks5_2::parseAddrPort(const address_t& in_address, int nrecv, Address &
 			len_match = (nrecv == 19); // 1 + 16 + 2
 			if (!len_match)
 				break;
-			char buf[40];
-			::inet_ntop(AF_INET6, in_address.addr, buf, sizeof(buf));
-			out_address.addr.append(buf);
+			FProtocol::inet_ntop(AF_INET6, in_address.addr, out_address.addr);
 			portOffset = 16;
 		}
 			break;
