@@ -107,6 +107,7 @@ struct ReplyCode {
 	const static int REPLY_ATYP_NOT_SUPPORTED = 0x08; // Address type not supported
 	const static int REPLY_UNASSIGNED_MIN = 0x09; // X'09' to X'FF' unassigned
 	const static int REPLY_UNASSIGNED_MAX = 0xFF; // X'09' to X'FF' unassigned
+	const static int REPLY_TERMINATE = 0xFFABCD; // used to close connection without reply.
 };
 
 //====================================================================
@@ -150,6 +151,7 @@ protected:
 	int methodSelect(const method_request_t& request);
 
 	int auth();
+	int authNone();
 	int authUnPw();
 	int authUnPw(const method_unpw_request_t& request);
 

@@ -14,12 +14,14 @@ using namespace std;
 #include "util/FServer.h"
 #include "fcore/FUtil.h"
 #include "fprotocol/FPSocks5.h"
+#include "fprotocol/FPSocks52.h"
 #include "fprotocol/FPHttp.h"
 using namespace freeyxm;
 
 void serv_process(FSocketTcp *socket);
 void serv_process2(FSocketTcp *socket);
 void serv_process_socket5(FSocketTcp *socket);
+void serv_process_socket52(FSocketTcp *socket);
 void serv_process_http(FSocketTcp *socket);
 
 int main(void) {
@@ -35,7 +37,7 @@ int main(void) {
 #endif
 
 	FServer server("", 2012, 100);
-	server.setProcessFun(serv_process_socket5);
+	server.setProcessFun(serv_process_socket52);
 	int ret = server.run();
 	printf("ret = %d, done!\n", ret);
 
@@ -86,6 +88,12 @@ void serv_process2(FSocketTcp *socket) {
 void serv_process_socket5(FSocketTcp *socket) {
 	FP_Socks5 s5;
 	s5.process(socket);
+	delete socket;
+}
+
+void serv_process_socket52(FSocketTcp *socket) {
+	socks5::FP_Socks5_2 s5(socket);
+	s5.run();
 	delete socket;
 }
 

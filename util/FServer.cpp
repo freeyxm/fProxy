@@ -12,6 +12,7 @@
 #include <cstdlib>
 #if __linux__
 #include <errno.h>
+#include <unistd.h>
 #endif
 
 namespace freeyxm {
@@ -151,6 +152,7 @@ int FServer::loop() {
 			if (this->process(socket)) {
 				return -1;
 			}
+			//sleep(1000);
 		} else {
 			int errcode = server_socket.getErrCode();
 			if (errcode == EINTR) {

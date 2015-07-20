@@ -100,7 +100,7 @@ void FProtocol::ntons(const unsigned short ns, char *p_ns) {
  * return: 1, success; 0, recv_socket closed; -1, error.
  */
 int FProtocol::onceRecvAndSend(FSocketTcp *recv_socket, FSocketTcp *send_socket, char *buf, const int buf_size) {
-	int nrecv, nsend;
+	int nrecv = 0, nsend = 0;
 	int ret = 1;
 	do {
 		nrecv = recv_socket->recv(buf, buf_size);
@@ -129,7 +129,6 @@ int FProtocol::loopRecvAndSend(FSocketTcp *socket1, FSocketTcp *socket2) {
 	int s_sid = socket2->getHandle();
 	fd_set r_fds;
 	int nfds = c_sid > s_sid ? c_sid + 1 : s_sid + 1;
-	int select_ret;
 
 	char *relay_buf = new char[RELAY_BUF_SIZE + 1];
 	if (!relay_buf) {
@@ -137,6 +136,7 @@ int FProtocol::loopRecvAndSend(FSocketTcp *socket1, FSocketTcp *socket2) {
 		return -1;
 	}
 
+	int select_ret;
 	while (1) {
 		FD_ZERO(&r_fds);
 		FD_SET(c_sid, &r_fds);

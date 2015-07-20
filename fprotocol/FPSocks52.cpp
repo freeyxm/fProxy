@@ -8,6 +8,9 @@
 #include <fprotocol/FPSocks52.h>
 #include <fprotocol/FProtocol.h>
 #include <cstring>
+#if __linux__
+#include <arpa/inet.h>
+#endif
 
 namespace freeyxm {
 
@@ -28,15 +31,21 @@ FP_Socks5_2::~FP_Socks5_2()
 
 void FP_Socks5_2::initMethods()
 {
-	m_methodNum = 1; // ...
+	m_methodNum = 2; // ...
 	m_pMethods = new method_info[m_methodNum];
+
 	m_pMethods[0].method = Method::METHOD_UN_PW;
 	m_pMethods[0].fun = &FP_Socks5_2::authUnPw;
+
+	m_pMethods[1].method = Method::METHOD_None;
+	m_pMethods[1].fun = &FP_Socks5_2::authNone;
 }
 
 int FP_Socks5_2::run()
 {
 	int ret = 0;
+
+	m_state = State_Select_Method;
 
 	bool running = true;
 	while (running)
@@ -145,11 +154,18 @@ int FP_Socks5_2::auth()
 {
 	switch (m_method)
 	{
+		case Method::METHOD_None:
+			return authNone();
 		case Method::METHOD_UN_PW:
 			return authUnPw();
 		default:
 			return -1;
 	}
+}
+
+int FP_Socks5_2::authNone()
+{
+	return 0;
 }
 
 int FP_Socks5_2::authUnPw()
@@ -209,6 +225,11 @@ int FP_Socks5_2::doRequest()
 		DEBUG_PRINTLN_ERR("recv error", m_pSocket->getErrCode(), m_pSocket->getErrStr().c_str());
 		return -1;
 	}
+	else if (nrecv == 0)
+	{
+		m_state = State_Close;
+		return 0;
+	}
 	else if (nrecv < REQUEST_DETAIL_MIN_LEN)
 	{
 		DEBUG_PRINTLN_MSG("Bad request: request_detail len < REQUEST_DETAIL_MIN_LEN!");
@@ -238,6 +259,8 @@ int FP_Socks5_2::doRequest(const request_detail_t& request, int nrecv)
 		return -1;
 	}
 
+	DEBUG_PRINT_T("request: cmd = %u, addr = %s, port = %d\n", request.cmd, address.addr.c_str(), address.port);
+
 	switch (request.cmd)
 	{
 		case CmdType::CMD_CONNECT:
@@ -258,7 +281,56 @@ int FP_Socks5_2::doRequest(const request_detail_t& request, int nrecv)
 
 int FP_Socks5_2::doRequestConnect(const Address &address)
 {
-	return 0;
+	int rep = ReplyCode::REPLY_FAILURE;
+	FSocketTcp *serv_socket = new FSocketTcp();
+
+	do
+	{
+		if (serv_socket->connect(address.addr.c_str(), address.port) < 0)
+		{
+			DEBUG_PRINTLN_ERR("connect error", serv_socket->getErrCode(), serv_socket->getErrStr().c_str());
+			rep = ReplyCode::REPLY_HOST_UNREACHABLE;
+			break;
+		}
+
+		// request reply:
+		request_reply_t reply;
+		reply.ver = S5_VERSION;
+		reply.rep = ReplyCode::REPLY_SUCCESS;
+		reply.rsv = S5_RESERVE;
+		reply.address.atyp = AddrType::ADDR_IPV4; // need to repair!!!
+
+		int nsend = sizeof(reply) - sizeof(reply.address) + sizeof(reply.address.atyp);
+		switch (reply.address.atyp)
+		{ // dst_addr bytes.
+			case AddrType::ADDR_IPV4:
+			{
+				sockaddr_in bind_addr = serv_socket->getLocalAddress();
+				::memcpy(&reply.address.addr + 0, &bind_addr.sin_addr, 4);
+				::memcpy(&reply.address.addr + 4, &bind_addr.sin_port, 2);
+				nsend += 6;
+			}
+				break;
+			default: // this should't happen here.
+				break;
+		}
+
+		int ret = m_pSocket->send((char*) &reply, nsend);
+		if (ret < 0 || ret != nsend)
+		{
+			DEBUG_PRINTLN_ERR("send error", m_pSocket->getErrCode(), m_pSocket->getErrStr().c_str());
+			rep = ReplyCode::REPLY_TERMINATE;
+			break;
+		}
+
+		FProtocol::loopRecvAndSend(m_pSocket, serv_socket);
+		serv_socket->close();
+
+	} while (0);
+
+	delete serv_socket;
+
+	return rep;
 }
 
 int FP_Socks5_2::doRequestBind(const Address &address)
@@ -294,17 +366,19 @@ int FP_Socks5_2::parseAddrPort(const address_t& in_address, int nrecv, Address &
 	{
 		case AddrType::ADDR_IPV4:
 		{
-			len_match = (nrecv == 4);
+			len_match = (nrecv == 7); // 1 + 4 + 2
 			if (!len_match)
 				break;
-			FProtocol::ip4_byte2str(in_address.addr, out_address.addr);
+			char buf[16];
+			::inet_ntop(AF_INET, in_address.addr, buf, sizeof(buf));
+			out_address.addr.append((buf));
 			portOffset = 4;
 		}
 			break;
 		case AddrType::ADDR_DOMAIN_NAME:
 		{
 			Byte len = in_address.addr[0];
-			len_match = (nrecv == len);
+			len_match = (nrecv == len + 4); // 1 + 1 + len + 2
 			if (!len_match)
 				break;
 			out_address.addr.append((char*) &in_address.addr[1], len);
@@ -313,10 +387,12 @@ int FP_Socks5_2::parseAddrPort(const address_t& in_address, int nrecv, Address &
 			break;
 		case AddrType::ADDR_IPV6:
 		{
-			len_match = (nrecv == 16);
+			len_match = (nrecv == 19); // 1 + 16 + 2
 			if (!len_match)
 				break;
-			FProtocol::ip6_byte2str(in_address.addr, out_address.addr);
+			char buf[40];
+			::inet_ntop(AF_INET6, in_address.addr, buf, sizeof(buf));
+			out_address.addr.append(buf);
 			portOffset = 16;
 		}
 			break;
@@ -333,7 +409,8 @@ int FP_Socks5_2::parseAddrPort(const address_t& in_address, int nrecv, Address &
 		return ReplyCode::REPLY_FAILURE;
 	}
 
-	out_address.port = FProtocol::ntohs((unsigned char*) &in_address.addr + portOffset);
+	uint16_t pp = *(uint16_t*) (in_address.addr + portOffset);
+	out_address.port = ::ntohs(pp);
 
 	return ReplyCode::REPLY_SUCCESS;
 }
