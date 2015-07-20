@@ -72,7 +72,7 @@ typedef struct {
 } request_reply_t;
 
 //====================================================================
-struct Method {
+struct MethodType {
 	const static int METHOD_None = 0x00; // X'00' NO AUTHENTICATION REQUIRED
 	const static int METHOD_GSSAPI = 0x01; // X'01' GSSAPI
 	const static int METHOD_UN_PW = 0X02; // X'02' USERNAME/PASSWORD
@@ -120,24 +120,6 @@ struct ReplyCode {
 #define REQUEST_DETAIL_MIN_LEN 10
 
 //====================================================================
-class FP_Socks5_2;
-
-typedef int (FP_Socks5_2::*auth_method_fun)(void);
-typedef struct {
-	Byte method;
-	auth_method_fun fun;
-} method_info;
-
-typedef enum {
-	State_New,
-	State_Select_Method,
-	State_Auth,
-	State_Request,
-	State_Close,
-	State_Closed,
-} socks_state;
-
-//====================================================================
 
 class FP_Socks5_2 {
 public:
@@ -145,6 +127,22 @@ public:
 	virtual ~FP_Socks5_2();
 
 	int run();
+
+protected:
+	typedef int (FP_Socks5_2::*auth_method_fun)(void);
+	typedef struct {
+		Byte method;
+		auth_method_fun fun;
+	} MethodInfo;
+
+	typedef enum {
+		State_New,
+		State_Select_Method,
+		State_Auth,
+		State_Request,
+		State_Close,
+		State_Closed,
+	} State;
 
 protected:
 	int methodSelect();
@@ -161,28 +159,21 @@ protected:
 	int doRequestBind(const Address &address);
 	int doRequestUdpAssociate(const Address &address);
 
-	int sendReply(const request_reply_t& reply, unsigned int size);
+	int sendRequestReply(Byte replyCode);
 
 	int parseAddrPort(const address_t& in_address, int nrecv, Address& out_address);
 
-	void close();
+	virtual void close();
 
-	virtual void initMethods();
-
-	typedef struct {
-		std::list<FSocketTcp*> m_tcpSockets;
-		std::list<FSocketUdp*> m_udpSockets;
-	} TaskInfo;
+	void AddAuthMethod(Byte method, auth_method_fun fun);
+	virtual void initAuthMethods();
 
 private:
 	FSocketTcp *m_pSocket;
-	socks_state m_state;
+	State m_state;
 
-	int m_methodNum; // auth methods num.
-	method_info *m_pMethods; // auth methods.
-	Byte m_method; // selected method for auth.
-
-	std::list<TaskInfo> m_tasks;
+	std::list<MethodInfo> m_authMethods;
+	Byte m_authMethod; // selected method for auth.
 };
 
 } /* namespace socks5 */

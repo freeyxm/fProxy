@@ -8,6 +8,7 @@
 #include <fprotocol/FPSocks52.h>
 #include <fprotocol/FProtocol.h>
 #include <cstring>
+#include <tr1/memory>
 #if __linux__
 #include <arpa/inet.h>
 #endif
@@ -21,24 +22,24 @@ using namespace freeyxm;
 FP_Socks5_2::FP_Socks5_2(FSocketTcp *socket) :
 		m_pSocket(socket), m_state(State_New)
 {
-	initMethods();
+	initAuthMethods();
 }
 
 FP_Socks5_2::~FP_Socks5_2()
 {
-	// TODO Auto-generated destructor stub
+	// m_pSocket managed by caller.
 }
 
-void FP_Socks5_2::initMethods()
+void FP_Socks5_2::initAuthMethods()
 {
-	m_methodNum = 2; // ...
-	m_pMethods = new method_info[m_methodNum];
+	AddAuthMethod(MethodType::METHOD_UN_PW, &FP_Socks5_2::authUnPw);
+	AddAuthMethod(MethodType::METHOD_None, &FP_Socks5_2::authNone);
+}
 
-	m_pMethods[0].method = Method::METHOD_UN_PW;
-	m_pMethods[0].fun = &FP_Socks5_2::authUnPw;
-
-	m_pMethods[1].method = Method::METHOD_None;
-	m_pMethods[1].fun = &FP_Socks5_2::authNone;
+void FP_Socks5_2::AddAuthMethod(Byte method, auth_method_fun fun)
+{
+	MethodInfo methodInfo = { method, fun };
+	m_authMethods.push_back(methodInfo);
 }
 
 int FP_Socks5_2::run()
@@ -73,7 +74,7 @@ int FP_Socks5_2::run()
 			case State_Request:
 			{
 				ret = doRequest();
-				// ...
+				m_state = State_Close;
 			}
 				break;
 			case State_Close:
@@ -124,7 +125,7 @@ int FP_Socks5_2::methodSelect()
 	method_reply_t reply;
 	reply.ver = S5_VERSION;
 	reply.method = methodSelect(request);
-	m_method = reply.method;
+	m_authMethod = reply.method;
 
 	int nsend = m_pSocket->send((const char*) &reply, sizeof(reply));
 	if (nsend < 0 || nsend != sizeof(reply))
@@ -133,30 +134,29 @@ int FP_Socks5_2::methodSelect()
 		return -1;
 	}
 
-	return reply.method == Method::METHOD_WRONG ? 1 : 0;
+	return reply.method == MethodType::METHOD_WRONG ? 1 : 0;
 }
 
 int FP_Socks5_2::methodSelect(const method_request_t& request)
 {
-	for (int i = 0; i < m_methodNum; ++i)
+	for (std::list<MethodInfo>::iterator it = m_authMethods.begin(); it != m_authMethods.end(); ++it)
 	{
-		Byte method = m_pMethods[i].method;
 		for (int k = 0; k < request.nmethods; ++k)
 		{
-			if (method == request.methods[k])
-				return method;
+			if (it->method == request.methods[k])
+				return it->method;
 		}
 	}
-	return Method::METHOD_WRONG;
+	return MethodType::METHOD_WRONG;
 }
 
 int FP_Socks5_2::auth()
 {
-	switch (m_method)
+	switch (m_authMethod)
 	{
-		case Method::METHOD_None:
+		case MethodType::METHOD_None:
 			return authNone();
-		case Method::METHOD_UN_PW:
+		case MethodType::METHOD_UN_PW:
 			return authUnPw();
 		default:
 			return -1;
@@ -251,45 +251,50 @@ int FP_Socks5_2::doRequest(const request_detail_t& request, int nrecv)
 	int ret = parseAddrPort(request.address, nrecv - (sizeof(request) - sizeof(request.address)), address);
 	if (ret != ReplyCode::REPLY_SUCCESS)
 	{
-		request_reply_t reply;
-		reply.ver = S5_VERSION;
-		reply.rep = ret;
-		reply.rsv = S5_RESERVE;
-		sendReply(reply, 3);
+		sendRequestReply(ret);
 		return -1;
 	}
 
 	DEBUG_PRINT_T("request: cmd = %u, addr = %s, port = %d\n", request.cmd, address.addr.c_str(), address.port);
 
+	int rep = ReplyCode::REPLY_SUCCESS;
 	switch (request.cmd)
 	{
 		case CmdType::CMD_CONNECT:
-			return doRequestConnect(address);
+			rep = doRequestConnect(address);
 			break;
 		case CmdType::CMD_BIND:
-			return doRequestBind(address);
+			rep = doRequestBind(address);
 			break;
 		case CmdType::CMD_UDP_ASSOCIATE:
-			return doRequestUdpAssociate(address);
+			rep = doRequestUdpAssociate(address);
 			break;
 		default:
+			rep = ReplyCode::REPLY_CMD_NOT_SUPPORTED;
 			DEBUG_PRINTLN_MSG("Bad request: request_detail cmd illegal!")
 			;
 			return -1;
 	}
+
+	if (rep != ReplyCode::REPLY_SUCCESS && rep != ReplyCode::REPLY_TERMINATE)
+	{
+		sendRequestReply(rep);
+	}
+
+	return rep == ReplyCode::REPLY_SUCCESS ? 0 : -1;
 }
 
 int FP_Socks5_2::doRequestConnect(const Address &address)
 {
-	int rep = ReplyCode::REPLY_FAILURE;
-	FSocketTcp *serv_socket = new FSocketTcp();
+	int rep = ReplyCode::REPLY_SUCCESS;
+	std::tr1::shared_ptr<FSocketTcp> serv_socket(new FSocketTcp());
 
 	do
 	{
 		if (serv_socket->connect(address.addr.c_str(), address.port) < 0)
 		{
-			DEBUG_PRINTLN_ERR("connect error", serv_socket->getErrCode(), serv_socket->getErrStr().c_str());
 			rep = ReplyCode::REPLY_HOST_UNREACHABLE;
+			DEBUG_PRINTLN_ERR("connect error", serv_socket->getErrCode(), serv_socket->getErrStr().c_str());
 			break;
 		}
 
@@ -300,7 +305,7 @@ int FP_Socks5_2::doRequestConnect(const Address &address)
 		reply.rsv = S5_RESERVE;
 		reply.address.atyp = AddrType::ADDR_IPV4; // need to repair!!!
 
-		int nsend = sizeof(reply) - sizeof(reply.address) + sizeof(reply.address.atyp);
+		int sendNum = sizeof(reply) - sizeof(reply.address) + sizeof(reply.address.atyp);
 		switch (reply.address.atyp)
 		{ // dst_addr bytes.
 			case AddrType::ADDR_IPV4:
@@ -308,27 +313,28 @@ int FP_Socks5_2::doRequestConnect(const Address &address)
 				sockaddr_in bind_addr = serv_socket->getLocalAddress();
 				::memcpy(&reply.address.addr + 0, &bind_addr.sin_addr, 4);
 				::memcpy(&reply.address.addr + 4, &bind_addr.sin_port, 2);
-				nsend += 6;
+				sendNum += 6;
 			}
 				break;
-			default: // this should't happen here.
+			default:
+				rep = ReplyCode::REPLY_ATYP_NOT_SUPPORTED;
 				break;
 		}
+		if (rep != ReplyCode::REPLY_SUCCESS)
+			break;
 
-		int ret = m_pSocket->send((char*) &reply, nsend);
-		if (ret < 0 || ret != nsend)
+		int nsend = m_pSocket->send((char*) &reply, sendNum);
+		if (nsend < 0 || nsend != sendNum)
 		{
-			DEBUG_PRINTLN_ERR("send error", m_pSocket->getErrCode(), m_pSocket->getErrStr().c_str());
 			rep = ReplyCode::REPLY_TERMINATE;
+			DEBUG_PRINTLN_ERR("send error", m_pSocket->getErrCode(), m_pSocket->getErrStr().c_str());
 			break;
 		}
 
-		FProtocol::loopRecvAndSend(m_pSocket, serv_socket);
+		FProtocol::loopRecvAndSend(m_pSocket, serv_socket.get());
 		serv_socket->close();
 
 	} while (0);
-
-	delete serv_socket;
 
 	return rep;
 }
@@ -343,10 +349,15 @@ int FP_Socks5_2::doRequestUdpAssociate(const Address &address)
 	return 0;
 }
 
-int FP_Socks5_2::sendReply(const request_reply_t& reply, unsigned int size)
+int FP_Socks5_2::sendRequestReply(Byte replyCode)
 {
-	int nsend = m_pSocket->send((const char*) &reply, size);
-	if (nsend < 0 || nsend != (int) size)
+	request_reply_t reply;
+	reply.ver = S5_VERSION;
+	reply.rep = replyCode;
+	reply.rsv = S5_RESERVE;
+
+	int nsend = m_pSocket->send((const char*) &reply, 3);
+	if (nsend < 0 || nsend != 3)
 	{
 		DEBUG_PRINTLN_ERR("send error", m_pSocket->getErrCode(), m_pSocket->getErrStr().c_str());
 		return -1;
