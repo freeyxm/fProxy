@@ -6,7 +6,7 @@
  */
 
 #include "FSocket.h"
-#include "FThread.h"
+#include "fcore/FThread.h"
 #include <cstring>
 #include <ctime>
 #if __linux__

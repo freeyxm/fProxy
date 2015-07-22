@@ -341,12 +341,12 @@ int FP_Socks5_2::doRequestConnect(const Address &address)
 
 int FP_Socks5_2::doRequestBind(const Address &address)
 {
-	return 0;
+	return ReplyCode::REPLY_CMD_NOT_SUPPORTED;
 }
 
 int FP_Socks5_2::doRequestUdpAssociate(const Address &address)
 {
-	return 0;
+	return ReplyCode::REPLY_CMD_NOT_SUPPORTED;
 }
 
 int FP_Socks5_2::sendRequestReply(Byte replyCode)

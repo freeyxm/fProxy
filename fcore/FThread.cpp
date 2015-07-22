@@ -6,7 +6,7 @@
  */
 
 #include "FThread.h"
-#include "FUtil.h"
+#include "fcore/FUtil.h"
 #include <cstring>
 #include <cstdlib>
 #if __linux__

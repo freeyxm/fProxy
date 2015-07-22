@@ -8,7 +8,7 @@
 #ifndef FUTIL_H_
 #define FUTIL_H_
 
-#include "FLogger.h"
+#include "fcore/FLogger.h"
 #include <string>
 
 namespace freeyxm {

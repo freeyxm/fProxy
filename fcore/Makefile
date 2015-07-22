@@ -1,10 +1,10 @@
-INCLUDES = 
+INCLUDES = -I../
 #LIBS = -lpthreadGC2 -lwsock32 -lws2_32
 MACROS = -D_DEBUG_ -D_LOG_MUTEX_ #-D__WIN32__
 CXX = g++
 CXXFLAGS = -g -O0 -Wall -fmessage-length=0 $(INCLUDES) $(MACROS)
 LDFLAGS =
-OBJS = FSocket.o FSocketTcp.o FSocketUdp.o FThread.o FUtil.o FLogger.o FPmTest.o FString.o
+OBJS = FSocket.o FSocketTcp.o FSocketUdp.o FThread.o FUtil.o FLogger.o FPmTest.o FString.o FThreadPool.o FThreadTask.o
 SRCS = ${OBJS:%.o=%.cpp}
 
 TARGET = libfcore.a
