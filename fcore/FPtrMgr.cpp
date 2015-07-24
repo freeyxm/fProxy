@@ -80,22 +80,25 @@ bool FPtrMgr<T>::addBusy(T* ptr)
 }
 
 template<typename T>
+void FPtrMgr<T>::clear(T *ptr)
+{
+	if (m_isArray)
+		delete[] ptr;
+	else
+		delete ptr;
+}
+
+template<typename T>
 void FPtrMgr<T>::clear()
 {
 	for (typename std::set<T*>::iterator it = m_free.begin(); it != m_free.end(); ++it)
 	{
-		if (m_isArray)
-			delete[] *it;
-		else
-			delete *it;
+		clear(*it);
 	}
 	m_free.clear();
 	for (typename std::set<T*>::iterator it = m_busy.begin(); it != m_busy.end(); ++it)
 	{
-		if (m_isArray)
-			delete[] *it;
-		else
-			delete *it;
+		clear(*it);
 	}
 	m_busy.clear();
 }

@@ -25,8 +25,10 @@ public:
 	bool addFree(T *ptr);
 	bool addBusy(T *ptr);
 
-	bool isFull();
+	virtual void clear(T *ptr);
 	void clear();
+
+	bool isFull();
 
 	void printStatus(const char *tag);
 
