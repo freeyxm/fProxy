@@ -147,8 +147,10 @@ bool FThreadPool::hasTask()
 
 void FThreadPool::printStatus()
 {
+	pthread_mutex_lock(&m_mutex);
 	LOG_PRINT_T("maxSize: %lu, size: %lu, busy: %lu, idle: %lu, task: %lu\n", m_maxSize, m_size, m_busy.size(), m_idle.size(),
 			m_tasks.size());
+	pthread_mutex_unlock(&m_mutex);
 }
 
 } /* namespace freeyxm */

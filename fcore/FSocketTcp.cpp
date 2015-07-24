@@ -36,8 +36,11 @@ FSocketTcp* FSocketTcp::accept() {
 		return NULL;
 	}
 	FSocketTcp* socket = new FSocketTcp();
-	socket->sock_fd = ret;
-	socket->remoteAddress = addr;
+	if(socket)
+	{
+		socket->sock_fd = ret;
+		socket->remoteAddress = addr;
+	}
 	return socket;
 }
 

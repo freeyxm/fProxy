@@ -37,7 +37,7 @@ private:
 	bool m_isArray;
 	std::set<T*> m_free;
 	std::set<T*> m_busy;
-	pthread_mutex_t m_lock;
+	pthread_mutex_t m_mutex;
 };
 
 } /* namespace freeyxm */

@@ -15,53 +15,56 @@ template<typename T>
 FPtrMgr<T>::FPtrMgr(size_t maxSize, bool isArray) :
 		m_maxSize(maxSize), m_isArray(isArray)
 {
-	m_lock = PTHREAD_MUTEX_INITIALIZER;
+	m_mutex = PTHREAD_MUTEX_INITIALIZER;
 }
 
 template<typename T>
 FPtrMgr<T>::~FPtrMgr()
 {
 	clear();
-	pthread_mutex_destroy(&m_lock);
+	pthread_mutex_destroy(&m_mutex);
 }
 
 template<typename T>
 T* FPtrMgr<T>::apply()
 {
 	T *ptr = NULL;
-	pthread_mutex_lock(&m_lock);
+	pthread_mutex_lock(&m_mutex);
 	if (m_free.size() > 0)
 	{
-		ptr = *m_free.begin();
+		typename std::set<T*>::iterator it = m_free.begin();
+		ptr = *it;
+		m_busy.insert(ptr);
+		m_free.erase(it);
 	}
-	pthread_mutex_unlock(&m_lock);
+	pthread_mutex_unlock(&m_mutex);
 	return ptr;
 }
 
 template<typename T>
 void FPtrMgr<T>::release(T* ptr)
 {
-	pthread_mutex_lock(&m_lock);
+	pthread_mutex_lock(&m_mutex);
 	typename std::set<T*>::iterator it = m_busy.find(ptr);
 	if (it != m_busy.end())
 	{
 		m_free.insert(ptr);
 		m_busy.erase(it);
 	}
-	pthread_mutex_unlock(&m_lock);
+	pthread_mutex_unlock(&m_mutex);
 }
 
 template<typename T>
 bool FPtrMgr<T>::addFree(T* ptr)
 {
 	bool ret = false;
-	pthread_mutex_lock(&m_lock);
+	pthread_mutex_lock(&m_mutex);
 	if (!isFull())
 	{
 		m_free.insert(ptr);
 		ret = true;
 	}
-	pthread_mutex_unlock(&m_lock);
+	pthread_mutex_unlock(&m_mutex);
 	return ret;
 }
 
@@ -69,13 +72,13 @@ template<typename T>
 bool FPtrMgr<T>::addBusy(T* ptr)
 {
 	bool ret = false;
-	pthread_mutex_lock(&m_lock);
+	pthread_mutex_lock(&m_mutex);
 	if (!isFull())
 	{
 		m_busy.insert(ptr);
 		ret = true;
 	}
-	pthread_mutex_unlock(&m_lock);
+	pthread_mutex_unlock(&m_mutex);
 	return ret;
 }
 
@@ -112,9 +115,11 @@ bool FPtrMgr<T>::isFull()
 template<typename T>
 void FPtrMgr<T>::printStatus(const char *tag)
 {
+	pthread_mutex_lock(&m_mutex);
 	int free = m_free.size();
 	int busy = m_busy.size();
 	LOG_PRINT_T("[%s] maxSize: %lu, size: %d, busy: %d, free: %d\n", tag, m_maxSize, busy + free, busy, free);
+	pthread_mutex_unlock(&m_mutex);
 }
 
 } /* namespace freeyxm */
