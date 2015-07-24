@@ -20,7 +20,10 @@ public:
 	FThreadPool(size_t size, size_t maxSize);
 	virtual ~FThreadPool();
 
-	void pushTask(FThreadTask *task);
+	bool pushTask(FThreadTask *task);
+
+	void setMaxSize(size_t maxSize);
+	void setTaskQueueSize(size_t maxSize);
 
 	void printStatus();
 
@@ -28,14 +31,19 @@ private:
 	int init();
 
 	int createThead();
-	void createTheads(int num);
+	int cancelThread(pthread_t tid);
+	int createTheads(int num);
 
-	void moveToIdle(pthread_t tid);
-	void moveToBusy(pthread_t tid);
-	bool isBusy(pthread_t tid);
+	inline void moveToIdle(pthread_t tid);
+	inline void moveToBusy(pthread_t tid);
+	inline bool isBusy(pthread_t tid);
 
-	FThreadTask* popTask();
-	bool hasTask();
+	inline bool isFull();
+	inline bool isOverflow();
+
+	inline FThreadTask* popTask();
+	inline bool hasTask();
+	inline bool isTaskFull();
 
 	static void* StartThread(void *arg);
 
@@ -45,7 +53,7 @@ private:
 	std::set<pthread_t> m_idle;
 	std::set<pthread_t> m_busy;
 
-	int m_taskMaxSize;
+	size_t m_taskQueueSize;
 	std::list<FThreadTask*> m_tasks;
 
 	pthread_mutex_t m_mutex;

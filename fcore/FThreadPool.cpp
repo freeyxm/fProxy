@@ -13,7 +13,7 @@
 namespace freeyxm {
 
 FThreadPool::FThreadPool(size_t size, size_t maxSize) :
-		m_size(0), m_maxSize(maxSize), m_taskMaxSize(0), m_running(false)
+		m_size(0), m_maxSize(maxSize), m_taskQueueSize(0), m_running(false)
 {
 	init();
 	createTheads(size);
@@ -56,14 +56,32 @@ int FThreadPool::createThead()
 	return ret;
 }
 
-void FThreadPool::createTheads(int num)
+int FThreadPool::cancelThread(pthread_t tid)
 {
+	int ret = pthread_cancel(tid);
+	if (ret == 0)
+	{
+		--m_size;
+		DEBUG_PRINT_T("cancel thread %lu, current size = %lu\n", tid, m_size);
+	}
+	else
+	{
+		LOG_PRINTLN_ERR("create thread error", ret, FUtil::getErrStr().c_str());
+	}
+	return ret;
+}
+
+int FThreadPool::createTheads(int num)
+{
+	int count = 0;
 	pthread_mutex_lock(&m_mutex);
 	for (int i = 0; i < num; ++i)
 	{
-		createThead();
+		if (createThead() == 0)
+			++count;
 	}
 	pthread_mutex_unlock(&m_mutex);
+	return count;
 }
 
 void* FThreadPool::StartThread(void *arg)
@@ -97,36 +115,59 @@ void* FThreadPool::StartThread(void *arg)
 	return NULL;
 }
 
-void FThreadPool::moveToIdle(pthread_t tid)
+inline void FThreadPool::moveToIdle(pthread_t tid)
 {
 	m_busy.erase(tid);
-	m_idle.insert(tid);
+	if (isOverflow())
+	{
+		cancelThread(tid);
+	}
+	else
+	{
+		m_idle.insert(tid);
+	}
 }
 
-void FThreadPool::moveToBusy(pthread_t tid)
+inline void FThreadPool::moveToBusy(pthread_t tid)
 {
 	m_idle.erase(tid);
 	m_busy.insert(tid);
 }
 
-bool FThreadPool::isBusy(pthread_t tid)
+inline bool FThreadPool::isBusy(pthread_t tid)
 {
 	return m_busy.count(tid) > 0;
 }
 
-void FThreadPool::pushTask(FThreadTask *task)
+inline bool FThreadPool::isFull()
 {
+	return m_maxSize > 0 && m_size >= m_maxSize;
+}
+
+inline bool FThreadPool::isOverflow()
+{
+	return m_maxSize > 0 && m_size > m_maxSize;
+}
+
+bool FThreadPool::pushTask(FThreadTask *task)
+{
+	bool ret = false;
 	pthread_mutex_lock(&m_mutex);
-	m_tasks.push_back(task);
-	if (m_idle.size() == 0 && m_size < m_maxSize)
+	if (!isTaskFull())
 	{
-		createThead();
+		m_tasks.push_back(task);
+		if (m_idle.size() == 0 && !isFull())
+		{
+			createThead();
+		}
+		ret = true;
 	}
 	pthread_mutex_unlock(&m_mutex);
 	pthread_cond_signal(&m_cond);
+	return ret;
 }
 
-FThreadTask* FThreadPool::popTask()
+inline FThreadTask* FThreadPool::popTask()
 {
 	if (m_tasks.size() > 0)
 	{
@@ -140,16 +181,45 @@ FThreadTask* FThreadPool::popTask()
 	}
 }
 
-bool FThreadPool::hasTask()
+inline bool FThreadPool::hasTask()
 {
 	return m_tasks.size() > 0;
+}
+
+inline bool FThreadPool::isTaskFull()
+{
+	return m_taskQueueSize > 0 && m_tasks.size() >= m_taskQueueSize;
+}
+
+void FThreadPool::setMaxSize(size_t maxSize)
+{
+	pthread_mutex_lock(&m_mutex);
+	m_maxSize = maxSize;
+	if (m_maxSize > 0)
+	{
+		while (m_size > m_maxSize)
+		{
+			if (m_idle.size() == 0)
+				break;
+			std::set<pthread_t>::iterator it = m_idle.begin();
+			pthread_t tid = *it;
+			m_idle.erase(it);
+			cancelThread(tid);
+		}
+	}
+	pthread_mutex_unlock(&m_mutex);
+}
+
+void FThreadPool::setTaskQueueSize(size_t maxSize)
+{
+	m_taskQueueSize = maxSize;
 }
 
 void FThreadPool::printStatus()
 {
 	pthread_mutex_lock(&m_mutex);
-	LOG_PRINT_T("maxSize: %lu, size: %lu, busy: %lu, idle: %lu, task: %lu\n", m_maxSize, m_size, m_busy.size(), m_idle.size(),
-			m_tasks.size());
+	LOG_PRINT_T("[pool] maxSize: %lu, size: %lu, busy: %lu, idle: %lu, task: %lu\n", m_maxSize, m_size, m_busy.size(),
+			m_idle.size(), m_tasks.size());
 	pthread_mutex_unlock(&m_mutex);
 }
 
