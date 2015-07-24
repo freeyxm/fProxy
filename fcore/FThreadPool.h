@@ -17,10 +17,12 @@ namespace freeyxm {
 
 class FThreadPool {
 public:
-	FThreadPool(int size, int maxSize);
+	FThreadPool(size_t size, size_t maxSize);
 	virtual ~FThreadPool();
 
 	void pushTask(FThreadTask *task);
+
+	void printStatus();
 
 private:
 	int init();
@@ -38,8 +40,8 @@ private:
 	static void* StartThread(void *arg);
 
 private:
-	int m_size;
-	int m_maxSize;
+	size_t m_size;
+	size_t m_maxSize;
 	std::set<pthread_t> m_idle;
 	std::set<pthread_t> m_busy;
 

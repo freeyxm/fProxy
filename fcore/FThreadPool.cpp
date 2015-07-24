@@ -12,7 +12,7 @@
 
 namespace freeyxm {
 
-FThreadPool::FThreadPool(int size, int maxSize) :
+FThreadPool::FThreadPool(size_t size, size_t maxSize) :
 		m_size(0), m_maxSize(maxSize), m_taskMaxSize(0), m_running(false)
 {
 	init();
@@ -47,7 +47,7 @@ int FThreadPool::createThead()
 	{
 		m_idle.insert(tid);
 		++m_size;
-		DEBUG_PRINT_T("create thread %u, current size = %u\n", tid, m_size);
+		DEBUG_PRINT_T("create thread %lu, current size = %lu\n", tid, m_size);
 	}
 	else
 	{
@@ -143,6 +143,12 @@ FThreadTask* FThreadPool::popTask()
 bool FThreadPool::hasTask()
 {
 	return m_tasks.size() > 0;
+}
+
+void FThreadPool::printStatus()
+{
+	LOG_PRINT_T("maxSize: %lu, size: %lu, busy: %lu, idle: %lu, task: %lu\n", m_maxSize, m_size, m_busy.size(), m_idle.size(),
+			m_tasks.size());
 }
 
 } /* namespace freeyxm */
