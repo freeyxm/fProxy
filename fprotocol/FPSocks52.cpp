@@ -27,7 +27,12 @@ FP_Socks5_2::FP_Socks5_2(FSocketTcp *socket) :
 
 FP_Socks5_2::~FP_Socks5_2()
 {
-	// m_pSocket managed by caller.
+	if (m_pSocket)
+	{
+		m_pSocket->close();
+		delete m_pSocket;
+		m_pSocket = NULL;
+	}
 }
 
 void FP_Socks5_2::initAuthMethods()
@@ -97,7 +102,6 @@ void FP_Socks5_2::close()
 	if (m_pSocket)
 	{
 		m_pSocket->close();
-		m_pSocket = NULL;
 	}
 }
 

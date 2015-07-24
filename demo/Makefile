@@ -6,7 +6,7 @@ MACROS = -D_DEBUG_ -D_LOG_MUTEX_ #-D__WIN32__
 CXX = g++
 CXXFLAGS = -g -O0 -Wall -fmessage-length=0 $(INCLUDES) $(MACROS)
 LDFLAGS = $(LIBS) #-mwindows
-OBJS = ../util/FServer.o
+OBJS = ../util/FServer.o ../util/FServerTask.o
 
 TARGET = fProxy.exe fClient.exe test.exe
 

@@ -9,6 +9,7 @@
 #define FSERVER_H_
 
 #include "fcore/FSocketTcp.h"
+#include "fcore/FThreadPool.h"
 #include <string>
 #include <semaphore.h>
 
@@ -23,12 +24,16 @@ public:
 	FServer(const string addr = "", const int port = 2012, const unsigned int max_conn_num = 0);
 	virtual ~FServer();
 
-	void setProcessFun(const fs_fun_t fun);
 	int run();
+
+	void setProcessFun(const fs_fun_t fun);
+	fs_fun_t getProcessFun();
 
 	void setListenQueueLen(int queue_len);
 	int getListenQueueLen();
 	int getMaxConnNum();
+
+	void taskDone(FSocketTcp *socket);
 
 protected:
 	virtual int loop();
@@ -37,18 +42,18 @@ private:
 	int init();
 	int setSignal();
 	static void sigHandler(int signum);
-	int process(FSocketTcp *socket);
-	static void thread_proxy(void*);
 
 private:
-	FSocketTcp server_socket;
-	fs_fun_t funHandle; // the function call by every connection.
-	string addr;
-	int port;
-	int stopped;
-	int listen_queue_len;
-	const int max_conn_num;
-	sem_t *p_max_conn_num_sem;
+	FSocketTcp m_serverSocket;
+	FThreadPool m_threadPool;
+	fs_fun_t m_funHandle; // the function call by every connection.
+	string m_addr;
+	int m_port;
+	int m_listenQueueLen;
+	int m_maxConnNum;
+	sem_t m_maxConnNumSem;
+	bool m_running;
+	bool m_inited;
 };
 
 } /* namespace freeyxm */

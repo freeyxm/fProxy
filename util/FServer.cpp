@@ -6,6 +6,7 @@
  */
 
 #include "FServer.h"
+#include "FServerTask.h"
 #include "fcore/FUtil.h"
 #include "fcore/FThread.h"
 #include <signal.h>
@@ -19,54 +20,55 @@ namespace freeyxm {
 
 static FServer *g_server;
 
-typedef struct {
-	sem_t *p_sem;
-	ft_funparam_t funparam;
-} fs_tp_param_t;
-
 FServer::FServer(const string addr, const int port, const unsigned int max_conn_num) :
-		addr(addr), port(port), max_conn_num(max_conn_num) {
-	funHandle = NULL;
-	stopped = 1;
-	listen_queue_len = 10;
+		m_serverSocket(), m_threadPool(10, 200), m_addr(addr), m_port(port), m_maxConnNum(max_conn_num)
+{
+	m_funHandle = NULL;
+	m_listenQueueLen = 10;
+	m_running = false;
+	m_inited = false;
 	g_server = this;
-	p_max_conn_num_sem = NULL;
 }
 
-FServer::~FServer() {
-	if (p_max_conn_num_sem) {
-		::free(p_max_conn_num_sem);
-		p_max_conn_num_sem = NULL;
+FServer::~FServer()
+{
+	if (m_inited)
+	{
+		sem_destroy(&m_maxConnNumSem);
 	}
+	m_serverSocket.close();
 }
 
-int FServer::init() {
-	if (!this->funHandle) {
+int FServer::init()
+{
+	if (!this->m_funHandle)
+	{
 		LOG_PRINTLN_MSG("process function handle uninitialized! Please call setProcessFun first to init it!");
 		return -1;
 	}
-	if (setSignal()) {
+	if (setSignal())
+	{
 		LOG_PRINTLN_MSG("set signal error!");
 		return -1;
 	}
-	if (max_conn_num > 0) {
-		p_max_conn_num_sem = (sem_t*) malloc(sizeof(sem_t));
-		if (!p_max_conn_num_sem) {
-			LOG_PRINTLN_FL("malloc error!");
-			return -1;
-		}
-		if (::sem_init(p_max_conn_num_sem, 0, max_conn_num) < 0) {
-			LOG_PRINTLN_MSG("sem_init error!");
+	if (m_maxConnNum > 0)
+	{
+		if (::sem_init(&m_maxConnNumSem, 0, m_maxConnNum) < 0)
+		{
+			LOG_PRINTLN_ERR("sem_init error", FUtil::getErrCode(), FUtil::getErrStr().c_str());
 			return -1;
 		}
 	}
+	m_inited = true;
 	return 0;
 }
 
-int FServer::setSignal() {
+int FServer::setSignal()
+{
 	return 0; // now, I can't solve accept() call restart across signals ...
 #ifdef __WIN32__
-	if (::signal(SIGINT, FServer::sigHandler) == SIG_ERR ) {
+	if (::signal(SIGINT, FServer::sigHandler) == SIG_ERR)
+	{
 		return -1;
 	}
 #else
@@ -74,20 +76,23 @@ int FServer::setSignal() {
 	new_act.sa_handler = FServer::sigHandler;
 	sigemptyset(&new_act.sa_mask);
 	new_act.sa_flags = 0;
-	if (::sigaction(SIGINT, &new_act, NULL) < 0) {
+	if (::sigaction(SIGINT, &new_act, NULL) < 0)
+	{
 		return -1;
 	}
 #endif
 	return 0;
 }
 
-void FServer::sigHandler(int signum) {
-	switch (signum) {
-	case SIGINT:
-		g_server->stopped = 1;
-		break;
-	default:
-		break;
+void FServer::sigHandler(int signum)
+{
+	switch (signum)
+	{
+		case SIGINT:
+			g_server->m_running = false;
+			break;
+		default:
+			break;
 	}
 }
 
@@ -96,120 +101,100 @@ void FServer::sigHandler(int signum) {
  * Set the process function for each connection.
  * The process fun must release Socket* send to it.
  */
-void FServer::setProcessFun(const fs_fun_t fun) {
-	this->funHandle = fun;
+void FServer::setProcessFun(const fs_fun_t fun)
+{
+	this->m_funHandle = fun;
 }
 
-void FServer::setListenQueueLen(int queue_len) {
-	this->listen_queue_len = queue_len;
+fs_fun_t FServer::getProcessFun()
+{
+	return this->m_funHandle;
 }
 
-int FServer::getListenQueueLen() {
-	return this->listen_queue_len;
+void FServer::setListenQueueLen(int queue_len)
+{
+	this->m_listenQueueLen = queue_len;
 }
 
-int FServer::getMaxConnNum() {
-	return this->max_conn_num;
+int FServer::getListenQueueLen()
+{
+	return this->m_listenQueueLen;
 }
 
-int FServer::run() {
-	if (init()) {
+int FServer::getMaxConnNum()
+{
+	return this->m_maxConnNum;
+}
+
+int FServer::run()
+{
+	if (!m_inited && init())
+	{
 		LOG_PRINTLN_MSG("server init failed!");
 		return -1;
 	}
-	int ret = server_socket.bind(this->addr.empty() ? NULL : this->addr.c_str(), this->port);
-	if (ret < 0) {
-		LOG_PRINTLN_ERR("server bind error", server_socket.getErrCode(), server_socket.getErrStr().c_str());
+	int ret = m_serverSocket.bind(this->m_addr.empty() ? NULL : this->m_addr.c_str(), this->m_port);
+	if (ret < 0)
+	{
+		LOG_PRINTLN_ERR("server bind error", m_serverSocket.getErrCode(), m_serverSocket.getErrStr().c_str());
 		return ret;
 	}
-	ret = server_socket.listen(listen_queue_len);
-	if (ret < 0) {
-		LOG_PRINTLN_ERR("server listen error", server_socket.getErrCode(), server_socket.getErrStr().c_str());
+	ret = m_serverSocket.listen(m_listenQueueLen);
+	if (ret < 0)
+	{
+		LOG_PRINTLN_ERR("server listen error", m_serverSocket.getErrCode(), m_serverSocket.getErrStr().c_str());
 		return ret;
 	}
 
-	DEBUG_MPRINT("server listening on %s:%d ...\n", this->addr.empty() ? "*" : this->addr.c_str(), this->port);
+	DEBUG_MPRINT("server listening on %s:%d ...\n", this->m_addr.empty() ? "*" : this->m_addr.c_str(), this->m_port);
 
 	ret = this->loop();
 
-	server_socket.close();
-	stopped = 1;
+	m_serverSocket.close();
+	m_running = false;
 
 	return ret;
 }
 
-int FServer::loop() {
-	stopped = 0;
-	while (!stopped) {
-		if (p_max_conn_num_sem && ::sem_wait(p_max_conn_num_sem) < 0) {
+int FServer::loop()
+{
+	m_running = true;
+	while (m_running)
+	{
+		if (m_maxConnNum > 0 && ::sem_wait(&m_maxConnNumSem) < 0)
+		{
 			LOG_PRINTLN_MSG("sem_wait error!");
 			break;
 		}
 		//DEBUG_PRINTLN_MSG("waitting for connection ...");
-		FSocketTcp *socket = server_socket.accept();
-		if (socket) {
+		FSocketTcp *socket = m_serverSocket.accept();
+		if (socket)
+		{
 			//DEBUG_MPRINT("accept a connection, sid: %d.\n", socket->getSocketHandle());
-			if (this->process(socket)) {
-				return -1;
-			}
+			m_threadPool.pushTask(new FServerTask(this, socket));
 			//sleep(1000);
-		} else {
-			int errcode = server_socket.getErrCode();
-			if (errcode == EINTR) {
+		}
+		else
+		{
+			int errcode = m_serverSocket.getErrCode();
+			if (errcode == EINTR)
+			{
 				continue;
 			}
-			LOG_PRINTLN_ERR("server accept error", server_socket.getErrCode(), server_socket.getErrStr().c_str());
+			LOG_PRINTLN_ERR("server accept error", m_serverSocket.getErrCode(), m_serverSocket.getErrStr().c_str());
 			return -1;
 		}
 	}
 	return 0;
 }
 
-int FServer::process(FSocketTcp *p_socket) {
-	// ---
-	fs_tp_param_t *tp_param = (fs_tp_param_t*) ::malloc(sizeof(fs_tp_param_t));
-	if (!tp_param) {
-		LOG_PRINTLN_FL("malloc error!");
-		return -1;
+void FServer::taskDone(FSocketTcp *p_socket)
+{
+	if (::sem_post(&m_maxConnNumSem) < 0)
+	{
+		LOG_PRINTLN_MSG("sem_post error!");
 	}
-	tp_param->p_sem = this->p_max_conn_num_sem;
-	tp_param->funparam.handle = (ft_fun_t) this->funHandle;
-	tp_param->funparam.param = (void*) p_socket;
-	// ---
-	ft_funparam_t funparam = { (ft_fun_t) FServer::thread_proxy, (void*) tp_param };
-	FThread thread(&funparam);
-	int ret = thread.start();
-	if (ret) {
-		DEBUG_MPRINT("thread create error, sid: %d, ret: %d.\n", p_socket->getHandle(), ret);
-		free(tp_param); // !!!
-		return -1;
-	} else {
-		thread.detach(); // ...
-	}
-	return 0;
-}
-
-void FServer::thread_proxy(void *param) {
-	fs_tp_param_t *tp_param = (fs_tp_param_t*) param;
-
-	do {
-		/*
-		 // ::sem_post call in loop() ...
-		 if (tp_param->p_sem) {
-		 if (::sem_wait(tp_param->p_sem) < 0) {
-		 DEBUG_PRINTLN_MSG("sem_wait error!");
-		 }
-		 }
-		 */
-		(*tp_param->funparam.handle)(tp_param->funparam.param);
-		if (tp_param->p_sem) {
-			if (::sem_post(tp_param->p_sem) < 0) {
-				LOG_PRINTLN_MSG("sem_post error!");
-			}
-		}
-	} while (0);
-
-	::free(tp_param);
+	m_threadPool.printStatus();
 }
 
 } /* namespace freeyxm */

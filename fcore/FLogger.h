@@ -42,18 +42,10 @@ namespace freeyxm {
 }
 
 #ifdef _DEBUG_
-#define DEBUG_PRINT(fmt, ...) {\
-	LOG_PRINT(fmt, ##__VA_ARGS__);\
-}
-#define DEBUG_PRINT_T(fmt, ...) {\
-	LOG_PRINT_T(fmt, ##__VA_ARGS__);\
-}
-#define DEBUG_MPRINT(fmt, ...) {\
-	MLOG_PRINT(fmt, ##__VA_ARGS__);\
-}
-#define DEBUG_MPRINT_T(fmt, ...) {\
-	MLOG_PRINT_T(fmt, ##__VA_ARGS__);\
-}
+#define DEBUG_PRINT(fmt, ...) LOG_PRINT(fmt, ##__VA_ARGS__)
+#define DEBUG_PRINT_T(fmt, ...) LOG_PRINT_T(fmt, ##__VA_ARGS__)
+#define DEBUG_MPRINT(fmt, ...) MLOG_PRINT(fmt, ##__VA_ARGS__)
+#define DEBUG_MPRINT_T(fmt, ...) MLOG_PRINT_T(fmt, ##__VA_ARGS__)
 #else
 #define DEBUG_PRINT(fmt, ...) ;
 #define DEBUG_PRINT_T(fmt, ...) ;
@@ -93,15 +85,18 @@ private:
 	static FILE* out_stream;
 };
 
-inline void FLogger::log_lock() {
+inline void FLogger::log_lock()
+{
 	pthread_mutex_lock(&log_mutex);
 }
 
-inline void FLogger::log_unlock() {
+inline void FLogger::log_unlock()
+{
 	pthread_mutex_unlock(&log_mutex);
 }
 
-inline FILE* FLogger::getOutStream() {
+inline FILE* FLogger::getOutStream()
+{
 	return out_stream;
 }
 
