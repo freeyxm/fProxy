@@ -126,7 +126,7 @@ public:
 	FP_Socks5_2(FSocketTcp *socket);
 	virtual ~FP_Socks5_2();
 
-	int run();
+	int process();
 
 protected:
 	typedef int (FP_Socks5_2::*auth_method_fun)(void);

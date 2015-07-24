@@ -98,8 +98,11 @@ void serv_process_socket5(FSocketTcp *socket)
 
 void serv_process_socket52(FSocketTcp *socket)
 {
-	socks5::FP_Socks5_2 s5(socket);
-	s5.run();
+	if (socket)
+	{
+		socks5::FP_Socks5_2 s5(socket);
+		s5.process();
+	}
 }
 
 void serv_process_http(FSocketTcp *socket)

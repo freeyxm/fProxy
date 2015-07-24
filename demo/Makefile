@@ -7,11 +7,16 @@ CXX = g++
 CXXFLAGS = -g -O0 -Wall -fmessage-length=0 $(INCLUDES) $(MACROS)
 LDFLAGS = $(LIBS) #-mwindows
 OBJS = ../util/FServer.o ../util/FServerTask.o
+SRCS = ${OBJS:%.o=%.cpp} fProxy.cpp fClient.cpp test.cpp
 
 TARGET = fProxy.exe fClient.exe test.exe
 
+all: depend $(TARGET)
 
-all: $(TARGET) 
+depend:
+	$(CXX) $(INCLUDES) -MM $(SRCS) > .depend
+
+-include .depend
 
 fProxy.exe: fProxy.o $(OBJS) $(LIB_DIR)/libfcore.a $(LIB_DIR)/libfprotocol.a
 	$(CXX) -o $@ fProxy.o $(OBJS) $(LDFLAGS)
@@ -24,8 +29,8 @@ test.exe: test.o $(OBJS) $(LIB_DIR)/libfcore.a $(LIB_DIR)/libfprotocol.a
 
 .PHONY: clean
 clean:
-	rm -rf *.o $(TARGET)
+	rm -rf *.o $(OBJS) $(TARGET)
 
 .PHONY: clean_win32
 clean_win32:
-	del /F/Q *.o $(TARGET)
+	del /F/Q *.o $(OBJS) $(TARGET)

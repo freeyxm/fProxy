@@ -47,7 +47,7 @@ void FP_Socks5_2::AddAuthMethod(Byte method, auth_method_fun fun)
 	m_authMethods.push_back(methodInfo);
 }
 
-int FP_Socks5_2::run()
+int FP_Socks5_2::process()
 {
 	int ret = 0;
 

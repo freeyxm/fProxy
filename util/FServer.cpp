@@ -194,7 +194,9 @@ void FServer::taskDone(FSocketTcp *p_socket)
 	{
 		LOG_PRINTLN_MSG("sem_post error!");
 	}
+#if _DEBUG_
 	m_threadPool.printStatus();
+#endif
 }
 
 } /* namespace freeyxm */
