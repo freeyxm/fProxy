@@ -52,7 +52,7 @@ void* FThreadTask::operator new(std::size_t size)
 		else
 		{
 			m_ptrMgr.addBusy(static_cast<FThreadTask*>(ptr));
-			PRINT_PTR_MGR_STATUS("new");
+			PRINT_PTR_MGR_STATUS("_new");
 		}
 	}
 	return ptr;
@@ -61,7 +61,7 @@ void* FThreadTask::operator new(std::size_t size)
 void FThreadTask::operator delete(void *ptr, std::size_t size)
 {
 	m_ptrMgr.release(static_cast<FThreadTask*>(ptr));
-	PRINT_PTR_MGR_STATUS("del");
+	PRINT_PTR_MGR_STATUS("_del");
 }
 
 } /* namespace freeyxm */

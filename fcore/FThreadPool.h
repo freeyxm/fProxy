@@ -45,7 +45,7 @@ private:
 	inline bool hasTask();
 	inline bool isTaskFull();
 
-	static void* StartThread(void *arg);
+	static void* ThreadRun(void *arg);
 
 private:
 	size_t m_size;
