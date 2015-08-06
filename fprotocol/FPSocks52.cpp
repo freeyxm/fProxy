@@ -314,9 +314,9 @@ int FP_Socks5_2::doRequestConnect(const Address &address)
 		{ // dst_addr bytes.
 			case AddrType::ADDR_IPV4:
 			{
-				sockaddr_in bind_addr = serv_socket->getLocalAddress();
-				::memcpy(&reply.address.addr + 0, &bind_addr.sin_addr, 4);
-				::memcpy(&reply.address.addr + 4, &bind_addr.sin_port, 2);
+				sockaddr_in *bind_addr = (sockaddr_in*) serv_socket->getLocalAddress();
+				::memcpy(&reply.address.addr + 0, &bind_addr->sin_addr, 4);
+				::memcpy(&reply.address.addr + 4, &bind_addr->sin_port, 2);
 				sendNum += 6;
 			}
 				break;

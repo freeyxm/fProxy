@@ -430,7 +430,7 @@ s5_method_t FP_Socks5::dealRequestBind(FSocketTcp *socket, const fp_socks5_reque
 				DEBUG_PRINTLN_ERR("getsockname error", FUtil::getErrCode(), FUtil::getErrStr().c_str());
 				return S5_REP_FAILURE;
 			}
-			bind_socket.setLocalAddress(addr);
+			bind_socket.setLocalAddress((struct sockaddr*) &addr);
 		}
 
 		if (bind_socket.listen()) {
@@ -445,9 +445,10 @@ s5_method_t FP_Socks5::dealRequestBind(FSocketTcp *socket, const fp_socks5_reque
 		bind_reply.rsv = S5_RESERVE;
 		//<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 		bind_reply.atyp = S5_ATYP_IP4; // chang to support ip6 ... !!!
-		string bind_addr = FSocket::inet_ntoa(bind_socket.getLocalAddress().sin_addr);
+		const sockaddr_in *pLocalAddr = (const sockaddr_in*)bind_socket.getLocalAddress();
+		string bind_addr = ::inet_ntoa(pLocalAddr->sin_addr);
 		::inet_pton(AF_INET, bind_addr.c_str(), bind_reply.addr_ip4);
-		FProtocol::ntons(bind_socket.getLocalAddress().sin_port, (char*) bind_reply.addr_ip4 + 4);
+		FProtocol::ntons(pLocalAddr->sin_port, (char*) bind_reply.addr_ip4 + 4);
 		int nsend = 4 + 4 + 2;
 		//<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 		ret = socket->send((char*) &bind_reply, nsend);
@@ -465,7 +466,8 @@ s5_method_t FP_Socks5::dealRequestBind(FSocketTcp *socket, const fp_socks5_reque
 				return S5_REP_FAILURE;
 			}
 			// check addr == dst_addr:
-			string req_addr = FSocket::inet_ntoa(bind_socket.getRemoteAddress().sin_addr);
+			const sockaddr_in *pRemoteAddr = (const sockaddr_in*)bind_socket.getLocalAddress();
+			string req_addr = ::inet_ntoa(pRemoteAddr->sin_addr);
 			if (req_addr != dst_addr) {
 				DEBUG_MPRINT("addr validate failed, dst_addr: %s, req_addr: %s.\n", dst_addr.c_str(), req_addr.c_str());
 				delete server_socket; // auto close().
@@ -475,7 +477,8 @@ s5_method_t FP_Socks5::dealRequestBind(FSocketTcp *socket, const fp_socks5_reque
 			// second bind reply:
 			//<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 			::inet_pton(AF_INET, bind_addr.c_str(), bind_reply.addr_ip4); // ... ???
-			unsigned short bind_port = bind_socket.getLocalAddress().sin_port; // ... ???
+			const sockaddr_in *pLocalAddr = (const sockaddr_in*)bind_socket.getLocalAddress();
+			unsigned short bind_port = pLocalAddr->sin_port; // ... ???
 			::memcpy(bind_reply.addr_ip4 + 4, &bind_port, 2);
 			nsend = 4 + 4 + 2;
 			//<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
@@ -521,7 +524,7 @@ s5_method_t FP_Socks5::dealRequestUdp(FSocketTcp *socket, const fp_socks5_reques
 				DEBUG_PRINTLN_ERR("getsockname error", FUtil::getErrCode(), FUtil::getErrStr().c_str());
 				return S5_REP_FAILURE;
 			}
-			udp_serv_socket.setLocalAddress(addr);
+			udp_serv_socket.setLocalAddress((struct sockaddr*) &addr);
 		}
 		if (udp_socket.createSocket()) {
 			DEBUG_PRINTLN_ERR("socket error", udp_serv_socket.getErrCode(), udp_serv_socket.getErrStr().c_str());
@@ -537,11 +540,11 @@ s5_method_t FP_Socks5::dealRequestUdp(FSocketTcp *socket, const fp_socks5_reques
 	bind_reply.atyp = S5_ATYP_IP4;
 	bind_reply.p_port = bind_reply.addr_ip4 + 4;
 	{
-		sockaddr_in addr = udp_serv_socket.getLocalAddress();
+		const sockaddr_in *pLocalAddr = (const sockaddr_in *)udp_serv_socket.getLocalAddress();
 		//string bind_addr = FSocket::inet_ntoa(addr.sin_addr); // how to get my ip which connected by client ???
 		string bind_addr = "127.0.0.1";
 		::inet_pton(AF_INET, bind_addr.c_str(), bind_reply.addr_ip4);
-		FProtocol::ntons(addr.sin_port, (char*) bind_reply.p_port);
+		FProtocol::ntons(pLocalAddr->sin_port, (char*) bind_reply.p_port);
 	}
 	const int nsend = 4 + 4 + 2;
 	//<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
@@ -583,7 +586,7 @@ s5_method_t FP_Socks5::dealRequestUdp(FSocketTcp *socket, const fp_socks5_reques
 			do {
 				ret = 0;
 				nrecv = udp_serv_socket.recvFrom((char*) &s5_udp,
-				S5_MAX_UDP_SIZE, &client_addr);
+				S5_MAX_UDP_SIZE, (struct sockaddr*)&client_addr);
 				if (nrecv < 0) {
 					DEBUG_PRINTLN_ERR("recvfrom error", udp_serv_socket.getErrCode(), udp_serv_socket.getErrStr().c_str());
 					ret = -1;
@@ -600,7 +603,7 @@ s5_method_t FP_Socks5::dealRequestUdp(FSocketTcp *socket, const fp_socks5_reques
 				if (src_port && (src_port != ::ntohs(client_addr.sin_port))) {
 					break;
 				}
-				if (is_check_addr && (src_addr != FSocket::inet_ntoa(client_addr.sin_addr))) {
+				if (is_check_addr && (src_addr != ::inet_ntoa(client_addr.sin_addr))) {
 					break;
 				}
 				if (this->parseAddrPort(&s5_udp, nrecv, dst_addr, dst_port) != S5_REP_SUCCESS) {
@@ -634,7 +637,7 @@ s5_method_t FP_Socks5::dealRequestUdp(FSocketTcp *socket, const fp_socks5_reques
 				break;
 			}
 
-			ret = udp_serv_socket.sendTo((char*) &s5_udp, nrecv, &client_addr);
+			ret = udp_serv_socket.sendTo((char*) &s5_udp, nrecv, (struct sockaddr*)&client_addr);
 			if (ret < 0 || ret != nrecv) {
 				DEBUG_PRINTLN_ERR("sendto error", udp_serv_socket.getErrCode(), udp_serv_socket.getErrStr().c_str());
 				break;

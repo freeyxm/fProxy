@@ -14,13 +14,13 @@ namespace freeyxm {
 
 class FSocketUdp: public freeyxm::FSocket {
 public:
-	FSocketUdp(int sin_family = AF_INET);
+	FSocketUdp(int domain = AF_INET);
 	virtual ~FSocketUdp();
 
 	int createSocket();
 
-	int recvFrom(char *buf, const size_t size, struct sockaddr_in *addr);
-	int sendTo(const char *buf, const size_t size, const struct sockaddr_in *addr);
+	int recvFrom(char *buf, const size_t size, struct sockaddr *addr);
+	int sendTo(const char *buf, const size_t size, const struct sockaddr *addr);
 
 	int recvFrom(char *buf, const size_t size);
 	int sendTo(const char *buf, const size_t size);

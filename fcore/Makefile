@@ -4,7 +4,7 @@ MACROS = -D_DEBUG_ -D_LOG_MUTEX_ #-D__WIN32__
 CXX = g++
 CXXFLAGS = -g -O0 -Wall -fmessage-length=0 $(INCLUDES) $(MACROS)
 LDFLAGS =
-OBJS = FSocket.o FSocketTcp.o FSocketUdp.o FThread.o FUtil.o FLogger.o FPmTest.o FString.o FThreadPool.o FThreadTask.o FPtrMgr.o
+OBJS = FSocket.o FSocketDomain.o FSocketDomain4.o FSocketDomain6.o FSocketTcp.o FSocketUdp.o FThread.o FUtil.o FLogger.o FPmTest.o FString.o FThreadPool.o FThreadTask.o FPtrMgr.o
 SRCS = ${OBJS:%.o=%.cpp}
 
 TARGET = libfcore.a

@@ -17,6 +17,7 @@
 #include <netinet/in.h>
 #endif
 #include <string>
+#include <fcore/FSocketDomain.h>
 
 namespace freeyxm {
 
@@ -28,11 +29,11 @@ using std::string;
 
 class FSocket {
 public:
-	FSocket(int sin_family = AF_INET);
-	virtual ~FSocket();
+	FSocket(int domain, int type);
+	virtual ~FSocket() = 0;
 
-	virtual int bind(const char *addr, const unsigned int port);
-	virtual int connect(const char *host, const unsigned int port);
+	virtual int bind(const char *addr, const uint16_t port);
+	virtual int connect(const char *addr, const uint16_t port);
 	virtual void close();
 
 	int getHandle();
@@ -41,31 +42,23 @@ public:
 
 	int setTimeout(bool send_flag, int sec, long usec = 0);
 
-	sockaddr_in getRemoteAddress();
-	sockaddr_in getLocalAddress();
-	void setRemoteAddress(const sockaddr_in &addr);
-	void setLocalAddress(const sockaddr_in &addr);
+	sockaddr* getLocalAddress();
+	sockaddr* getRemoteAddress();
+	void setLocalAddress(const sockaddr* addr);
+	void setRemoteAddress(const sockaddr* addr);
 
-	int getSinFamily();
-	void setSinFamily(int sin_family);
+	socklen_t getAddrLen();
 
 	int getErrCode();
 	string getErrStr();
-
-	static string inet_ntoa(struct in_addr addr);
 
 protected:
 	int createSocket();
 	int setSockaddr(sockaddr_in &addr, const int sin_family, const char *host, const unsigned int port);
 
 protected:
-	int sock_fd;
-	sockaddr_in remoteAddress;
-	sockaddr_in localAddress;
-	int sin_family;
-	int socket_domain;
-	int socket_type;
-	int socket_protocol;
+	int m_sockfd;
+	FSocketDomain *m_pSocketDomain;
 };
 
 } /* namespace freeyxm */

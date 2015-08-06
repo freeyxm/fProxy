@@ -14,7 +14,7 @@ namespace freeyxm {
 
 class FSocketTcp: public FSocket {
 public:
-	FSocketTcp(int sin_family = AF_INET);
+	FSocketTcp(int domain = AF_INET);
 	virtual ~FSocketTcp();
 
 	int listen(const int n = 10);

@@ -133,7 +133,7 @@ int FServer::run()
 		LOG_PRINTLN_MSG("server init failed!");
 		return -1;
 	}
-	int ret = m_serverSocket.bind(this->m_addr.empty() ? NULL : this->m_addr.c_str(), this->m_port);
+	int ret = m_serverSocket.bind(this->m_addr.empty() ? NULL : this->m_addr.c_str(), (uint16_t) this->m_port);
 	if (ret < 0)
 	{
 		LOG_PRINTLN_ERR("server bind error", m_serverSocket.getErrCode(), m_serverSocket.getErrStr().c_str());
