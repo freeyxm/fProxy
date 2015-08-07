@@ -18,7 +18,7 @@
 namespace freeyxm {
 
 FSocketDomain::FSocketDomain(int socket_domain, int socket_type) :
-		m_socketfd(-1), m_socketDomain(socket_domain), m_socketType(socket_type), m_socketProtocol(0)
+		m_socketfd(-1), m_socketDomain(socket_domain), m_socketType(socket_type)
 {
 	// TODO Auto-generated constructor stub
 }
@@ -26,19 +26,6 @@ FSocketDomain::FSocketDomain(int socket_domain, int socket_type) :
 FSocketDomain::~FSocketDomain()
 {
 	close();
-}
-
-void FSocketDomain::close()
-{
-	if (this->m_socketfd != -1)
-	{
-#ifdef __WIN32__
-		::closesocket(this->m_socketfd);
-#else
-		::close(this->m_socketfd);
-#endif
-		this->m_socketfd = -1;
-	}
 }
 
 int FSocketDomain::createSocket(int protocol)
@@ -58,31 +45,7 @@ int FSocketDomain::createSocket(int protocol)
 	return 0;
 }
 
-int FSocketDomain::getAddrInfo(const char *addr, const uint16_t port, struct addrinfo **res)
-{
-	struct addrinfo hints;
-	memset(&hints, 0, sizeof(hints));
-	hints.ai_family = this->m_socketDomain;
-	hints.ai_socktype = this->m_socketType;
-	if (addr == NULL)
-	{
-		hints.ai_flags = AI_PASSIVE;
-	}
-
-	char port_str[6];
-	sprintf(port_str, "%d", port);
-
-	int status = getaddrinfo(addr, port_str, &hints, res);
-	if (status != 0)
-	{
-		DEBUG_PRINTLN_ERR("getaddrinfo error", status, gai_strerror(status));
-		return -1;
-	}
-
-	return 0;
-}
-
-int FSocketDomain::bind(const char *addr, const uint16_t port)
+int FSocketDomain::bind(const char *addr, const in_port_t port)
 {
 	struct addrinfo *res;
 	if (getAddrInfo(addr, port, &res) != 0)
@@ -121,7 +84,7 @@ int FSocketDomain::bind(const char *addr, const uint16_t port)
 	return ret == 0 ? 0 : -1;
 }
 
-int FSocketDomain::connect(const char *addr, const uint16_t port)
+int FSocketDomain::connect(const char *addr, const in_port_t port)
 {
 	struct addrinfo *res;
 	if (getAddrInfo(addr, port, &res) != 0)
@@ -152,6 +115,19 @@ int FSocketDomain::connect(const char *addr, const uint16_t port)
 	return ret == 0 ? 0 : -1;
 }
 
+void FSocketDomain::close()
+{
+	if (this->m_socketfd != -1)
+	{
+#ifdef __WIN32__
+		::closesocket(this->m_socketfd);
+#else
+		::close(this->m_socketfd);
+#endif
+		this->m_socketfd = -1;
+	}
+}
+
 struct sockaddr* FSocketDomain::getLocalAddress()
 {
 	return (struct sockaddr*) (&this->m_localAddress);
@@ -160,6 +136,32 @@ struct sockaddr* FSocketDomain::getLocalAddress()
 struct sockaddr* FSocketDomain::getRemoteAddress()
 {
 	return (struct sockaddr*) (&this->m_remoteAddress);
+}
+
+int FSocketDomain::getAddrInfo(const char *addr, const in_port_t port, struct addrinfo **res)
+{
+	return getAddrInfo(this->m_socketDomain, this->m_socketType, addr, port, res);
+}
+
+int FSocketDomain::getAddrInfo(int domain, int type, const char *addr, const in_port_t port, struct addrinfo **res)
+{
+	struct addrinfo hints;
+	memset(&hints, 0, sizeof(hints));
+	hints.ai_family = domain;
+	hints.ai_socktype = type;
+	hints.ai_flags = AI_PASSIVE;
+
+	char port_str[6];
+	sprintf(port_str, "%d", port);
+
+	int status = getaddrinfo(addr, port_str, &hints, res);
+	if (status != 0)
+	{
+		DEBUG_PRINTLN_ERR("getaddrinfo error", status, gai_strerror(status));
+		return -1;
+	}
+
+	return 0;
 }
 
 } /* namespace freeyxm */

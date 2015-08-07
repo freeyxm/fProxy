@@ -8,6 +8,7 @@
 #ifndef FSOCKET_H_
 #define FSOCKET_H_
 
+#include <fcore/FSocketDomain.h>
 #ifdef __WIN32__
 #include <winsock.h>
 #include <wininet.h>
@@ -17,7 +18,6 @@
 #include <netinet/in.h>
 #endif
 #include <string>
-#include <fcore/FSocketDomain.h>
 
 namespace freeyxm {
 
@@ -32,14 +32,13 @@ public:
 	FSocket(int domain, int type);
 	virtual ~FSocket() = 0;
 
-	virtual int bind(const char *addr, const uint16_t port);
-	virtual int connect(const char *addr, const uint16_t port);
+	virtual int bind(const char *addr, const in_port_t port);
+	virtual int connect(const char *addr, const in_port_t port);
 	virtual void close();
 
 	int getHandle();
 
-	int setBlockMode(int flag);
-
+	int setBlockMode(bool block);
 	int setTimeout(bool send_flag, int sec, long usec = 0);
 
 	sockaddr* getLocalAddress();
@@ -54,7 +53,7 @@ public:
 
 protected:
 	int createSocket();
-	int setSockaddr(sockaddr_in &addr, const int sin_family, const char *host, const unsigned int port);
+	int setSockaddr(struct sockaddr *pSockAddr, const char *addr, const in_port_t port);
 
 protected:
 	int m_sockfd;

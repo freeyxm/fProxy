@@ -420,7 +420,7 @@ int FP_Socks5_2::parseAddrPort(const address_t& in_address, int nrecv, Address &
 		return ReplyCode::REPLY_FAILURE;
 	}
 
-	uint16_t pp = *(uint16_t*) (in_address.addr + portOffset);
+	in_port_t pp = *(in_port_t*) (in_address.addr + portOffset);
 	out_address.port = ::ntohs(pp);
 
 	return ReplyCode::REPLY_SUCCESS;

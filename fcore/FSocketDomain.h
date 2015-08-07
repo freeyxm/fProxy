@@ -11,7 +11,6 @@
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <netdb.h>
-#include <stdint.h>
 
 namespace freeyxm {
 
@@ -20,8 +19,9 @@ public:
 	FSocketDomain(int socket_domain, int socket_type);
 	virtual ~FSocketDomain();
 
-	virtual int bind(const char *addr, const uint16_t port);
-	virtual int connect(const char *addr, const uint16_t port);
+	virtual int createSocket(int protocol = 0);
+	virtual int bind(const char *addr, const in_port_t port);
+	virtual int connect(const char *addr, const in_port_t port);
 	virtual void close();
 
 	struct sockaddr* getLocalAddress();
@@ -35,16 +35,24 @@ public:
 	{
 		return m_socketfd;
 	}
+	inline int getSocketDomain()
+	{
+		return m_socketDomain;
+	}
+	inline int getSocketType()
+	{
+		return m_socketType;
+	}
+
+	static int getAddrInfo(int domain, int type, const char *addr, const in_port_t port, struct addrinfo **res);
 
 protected:
-	int createSocket(int protocol);
-	int getAddrInfo(const char *addr, const uint16_t port, struct addrinfo **res);
+	int getAddrInfo(const char *addr, const in_port_t port, struct addrinfo **res);
 
 protected:
 	int m_socketfd;
 	int m_socketDomain;
 	int m_socketType;
-	int m_socketProtocol;
 	struct sockaddr_storage m_localAddress;
 	struct sockaddr_storage m_remoteAddress;
 };

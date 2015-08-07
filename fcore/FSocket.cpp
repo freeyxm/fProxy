@@ -9,6 +9,7 @@
 #include <fcore/FThread.h>
 #include <fcore/FSocketDomain4.h>
 #include <fcore/FSocketDomain6.h>
+#include <fcore/FLogger.h>
 #include <cstring>
 #include <ctime>
 #include <assert.h>
@@ -46,36 +47,10 @@ FSocket::~FSocket()
 
 int FSocket::createSocket()
 {
-	return -1;
+	return m_pSocketDomain->createSocket();
 }
 
-int FSocket::setSockaddr(sockaddr_in &addr, const int sin_family, const char *host, const unsigned int port)
-{
-	::memset(&addr, 0, sizeof(addr));
-	addr.sin_family = AF_INET;
-	addr.sin_port = ::htons(port);
-	if (host)
-	{
-		addr.sin_addr.s_addr = ::inet_addr(host);
-	}
-	else
-	{
-		addr.sin_addr.s_addr = ::htonl(INADDR_ANY);
-	}
-	if (addr.sin_addr.s_addr == INADDR_NONE)
-	{
-		/* domain name maybe */
-		struct hostent *host_info = ::gethostbyname(host);
-		if (!host_info)
-		{
-			return -1;
-		}
-		addr.sin_addr.s_addr = *(size_t*) host_info->h_addr_list[0];
-	}
-	return 0;
-}
-
-int FSocket::bind(const char *addr, const uint16_t port)
+int FSocket::bind(const char *addr, const in_port_t port)
 {
 	int ret = m_pSocketDomain->bind(addr, port);
 	if (ret == 0)
@@ -85,7 +60,7 @@ int FSocket::bind(const char *addr, const uint16_t port)
 	return ret;
 }
 
-int FSocket::connect(const char *addr, const uint16_t port)
+int FSocket::connect(const char *addr, const in_port_t port)
 {
 	int ret = m_pSocketDomain->connect(addr, port);
 	if (ret == 0)
@@ -108,20 +83,16 @@ int FSocket::getHandle()
 	return this->m_sockfd;
 }
 
-int FSocket::setBlockMode(int flag)
+int FSocket::setBlockMode(bool block)
 {
-	if (flag && flag != 1)
-	{
-		flag = 1;
-	}
 #ifdef __WIN32__
-	u_long mode = flag;
+	u_long mode = block ? 1 : 0;
 	if (::ioctlsocket(this->m_sockfd, FIONBIO, &mode))
 	{
 		return -1;
 	}
 #else
-	int mode = flag;
+	int mode = block ? 1 : 0;
 	if (::ioctl(this->m_sockfd, FIONBIO, &mode))
 	{
 		return -1;
@@ -186,6 +157,23 @@ string FSocket::getErrStr()
 #else
 	return ::strerror(errno);
 #endif
+}
+
+int FSocket::setSockaddr(struct sockaddr *pSockAddr, const char *addr, const in_port_t port)
+{
+	struct addrinfo *res;
+	int domain = m_pSocketDomain->getSocketDomain();
+	int type = m_pSocketDomain->getSocketType();
+
+	if (FSocketDomain::getAddrInfo(domain, type, addr, port, &res) != 0)
+	{
+		return -1;
+	}
+
+	::memcpy(pSockAddr, res->ai_addr, res->ai_addrlen);
+	::freeaddrinfo(res);
+
+	return 0;
 }
 
 } /* namespace freeyxm */
