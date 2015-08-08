@@ -49,7 +49,7 @@ public:
 	socklen_t getAddrLen();
 
 	int getErrCode();
-	string getErrStr();
+	const char* getErrStr();
 
 protected:
 	int createSocket();

@@ -5,10 +5,6 @@
  *      Author: aka
  */
 
-#define _POSIX_C_SOURCE 1
-#define _XOPEN_SOURCE
-#define _POSIX_SOURCE
-
 #include <fcore/FSocketDomain.h>
 #include <fcore/FUtil.h>
 #include <cstring>
@@ -38,7 +34,7 @@ int FSocketDomain::createSocket(int protocol)
 	m_socketfd = ::socket(this->m_socketDomain, this->m_socketType, protocol);
 	if (m_socketfd == -1)
 	{
-		DEBUG_PRINTLN_ERR("create socket error", FUtil::getErrCode(), FUtil::getErrStr().c_str());
+		DEBUG_PRINTLN_ERR("create socket error", FUtil::getErrCode(), FUtil::getErrStr());
 		return -1;
 	}
 
@@ -64,14 +60,14 @@ int FSocketDomain::bind(const char *addr, const in_port_t port)
 		ret = ::setsockopt(this->m_socketfd, SOL_SOCKET, SO_REUSEADDR, &optval, sizeof(optval));
 		if (ret != 0)
 		{
-			DEBUG_PRINTLN_ERR("setsockopt error", FUtil::getErrCode(), FUtil::getErrStr().c_str());
+			DEBUG_PRINTLN_ERR("setsockopt error", FUtil::getErrCode(), FUtil::getErrStr());
 			break;
 		}
 
 		ret = ::bind(this->m_socketfd, res->ai_addr, res->ai_addrlen);
 		if (ret != 0)
 		{
-			DEBUG_PRINTLN_ERR("bind error", FUtil::getErrCode(), FUtil::getErrStr().c_str());
+			DEBUG_PRINTLN_ERR("bind error", FUtil::getErrCode(), FUtil::getErrStr());
 			break;
 		}
 
@@ -102,7 +98,7 @@ int FSocketDomain::connect(const char *addr, const in_port_t port)
 		ret = ::connect(this->m_socketfd, res->ai_addr, res->ai_addrlen);
 		if (ret != 0)
 		{
-			DEBUG_PRINTLN_ERR("connect error", FUtil::getErrCode(), FUtil::getErrStr().c_str());
+			DEBUG_PRINTLN_ERR("connect error", FUtil::getErrCode(), FUtil::getErrStr());
 			break;
 		}
 

@@ -57,7 +57,7 @@ int FP_Socks5::dealValidate(FSocketTcp *socket) {
 
 	int ret = socket->recv((char*) &s5_method, sizeof(s5_method));
 	if (ret < 0) { // error occur.
-		DEBUG_PRINTLN_ERR("recv error", socket->getErrCode(), socket->getErrStr().c_str());
+		DEBUG_PRINTLN_ERR("recv error", socket->getErrCode(), socket->getErrStr());
 		return -1;
 	} else if (ret < S5_MIN_METHOD_SIZE) { // Bad request.
 		DEBUG_PRINTLN_MSG("Bad request: method msg size smaller than S5_MIN_METHOD_SIZE!");
@@ -82,7 +82,7 @@ int FP_Socks5::dealValidate(FSocketTcp *socket) {
 	int nsend = sizeof(s5_method.ver) + sizeof(s5_method.method);
 	ret = socket->send((char*) &s5_method, nsend);
 	if (ret < 0 || ret != nsend) { // send error.
-		DEBUG_PRINTLN_ERR("send error", socket->getErrCode(), socket->getErrStr().c_str());
+		DEBUG_PRINTLN_ERR("send error", socket->getErrCode(), socket->getErrStr());
 		return -1;
 	}
 
@@ -117,7 +117,7 @@ int FP_Socks5::validate(int method, FSocketTcp *socket) {
 		fp_socks5_userpass_t s5_up, s5_up_reply;
 		int ret = socket->recv((char*) &s5_up, S5_MAX_USERPASS_SIZE);
 		if (ret < 0) {
-			DEBUG_PRINTLN_ERR("recv error", socket->getErrCode(), socket->getErrStr().c_str());
+			DEBUG_PRINTLN_ERR("recv error", socket->getErrCode(), socket->getErrStr());
 			return -1;
 		} else if (ret == 0) { // remote socket closed ...
 			return 0;
@@ -155,7 +155,7 @@ int FP_Socks5::validate(int method, FSocketTcp *socket) {
 		int nsend = sizeof(s5_up_reply.ver) + sizeof(s5_up_reply.status);
 		ret = socket->send((char*) &s5_up_reply, nsend);
 		if (ret < 0 || ret != nsend) {
-			DEBUG_PRINTLN_ERR("send error", socket->getErrCode(), socket->getErrStr().c_str());
+			DEBUG_PRINTLN_ERR("send error", socket->getErrCode(), socket->getErrStr());
 			return -1;
 		}
 
@@ -185,7 +185,7 @@ int FP_Socks5::dealRequest(FSocketTcp *socket) {
 
 	int ret = socket->recv((char*) &s5_request, S5_MAX_REQUEST_SIZE);
 	if (ret < 0) { // error.
-		DEBUG_PRINTLN_ERR("recv error", socket->getErrCode(), socket->getErrStr().c_str());
+		DEBUG_PRINTLN_ERR("recv error", socket->getErrCode(), socket->getErrStr());
 		return -1;
 	} else if (ret == 0) { // remote socket closed ...
 		return 0;
@@ -239,7 +239,7 @@ int FP_Socks5::dealRequest(FSocketTcp *socket) {
 		int nsend = &s5_reply.rsv - &s5_reply.ver + sizeof(s5_reply.rsv); // byte after s5_repsly.rsv are all 0x00 now.
 		ret = socket->send((char*) &s5_reply, nsend);
 		if (ret < 0 || ret != nsend) {
-			DEBUG_PRINTLN_ERR("send error", socket->getErrCode(), socket->getErrStr().c_str());
+			DEBUG_PRINTLN_ERR("send error", socket->getErrCode(), socket->getErrStr());
 			return -1;
 		}
 	}
@@ -360,7 +360,7 @@ s5_method_t FP_Socks5::dealRequestConnect(FSocketTcp *socket, const fp_socks5_re
 
 	do {
 		if (serv_socket.connect(dst_addr.c_str(), dst_port) < 0) {
-			DEBUG_PRINTLN_ERR("connect error", socket->getErrCode(), socket->getErrStr().c_str());
+			DEBUG_PRINTLN_ERR("connect error", socket->getErrCode(), socket->getErrStr());
 			rep = S5_REP_HOST_UNREACHABLE;
 			break;
 		}
@@ -388,7 +388,7 @@ s5_method_t FP_Socks5::dealRequestConnect(FSocketTcp *socket, const fp_socks5_re
 
 		int ret = socket->send((char*) &s5_reply, nsend);
 		if (ret < 0 || ret != nsend) {
-			DEBUG_PRINTLN_ERR("send error", socket->getErrCode(), socket->getErrStr().c_str());
+			DEBUG_PRINTLN_ERR("send error", socket->getErrCode(), socket->getErrStr());
 			rep = S5_REP_TERMINATED;
 			break;
 		}
@@ -419,7 +419,7 @@ s5_method_t FP_Socks5::dealRequestBind(FSocketTcp *socket, const fp_socks5_reque
 	do {
 		ret = bind_socket.bind(NULL, 0);
 		if (ret < 0) {
-			DEBUG_PRINTLN_ERR("bind error", bind_socket.getErrCode(), bind_socket.getErrStr().c_str());
+			DEBUG_PRINTLN_ERR("bind error", bind_socket.getErrCode(), bind_socket.getErrStr());
 			return S5_REP_FAILURE;
 		}
 		{
@@ -427,14 +427,14 @@ s5_method_t FP_Socks5::dealRequestBind(FSocketTcp *socket, const fp_socks5_reque
 			unsigned int addr_len = sizeof(addr);
 			ret = ::getsockname(bind_socket.getHandle(), (struct sockaddr*) &addr, &addr_len);
 			if (ret < 0) {
-				DEBUG_PRINTLN_ERR("getsockname error", FUtil::getErrCode(), FUtil::getErrStr().c_str());
+				DEBUG_PRINTLN_ERR("getsockname error", FUtil::getErrCode(), FUtil::getErrStr());
 				return S5_REP_FAILURE;
 			}
 			bind_socket.setLocalAddress((struct sockaddr*) &addr);
 		}
 
 		if (bind_socket.listen()) {
-			DEBUG_PRINTLN_ERR("listen error", bind_socket.getErrCode(), bind_socket.getErrStr().c_str());
+			DEBUG_PRINTLN_ERR("listen error", bind_socket.getErrCode(), bind_socket.getErrStr());
 			return S5_REP_FAILURE;
 		}
 
@@ -453,7 +453,7 @@ s5_method_t FP_Socks5::dealRequestBind(FSocketTcp *socket, const fp_socks5_reque
 		//<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 		ret = socket->send((char*) &bind_reply, nsend);
 		if (ret < 0 || ret != nsend) {
-			DEBUG_PRINTLN_ERR("send error", socket->getErrCode(), socket->getErrStr().c_str());
+			DEBUG_PRINTLN_ERR("send error", socket->getErrCode(), socket->getErrStr());
 			return S5_REP_TERMINATED;
 		}
 
@@ -462,7 +462,7 @@ s5_method_t FP_Socks5::dealRequestBind(FSocketTcp *socket, const fp_socks5_reque
 			// socks server may wait here forever, so It's important to find a solution !!!
 			server_socket = bind_socket.accept();
 			if (!server_socket) {
-				DEBUG_PRINTLN_ERR("accept error", server_socket->getErrCode(), server_socket->getErrStr().c_str());
+				DEBUG_PRINTLN_ERR("accept error", server_socket->getErrCode(), server_socket->getErrStr());
 				return S5_REP_FAILURE;
 			}
 			// check addr == dst_addr:
@@ -484,7 +484,7 @@ s5_method_t FP_Socks5::dealRequestBind(FSocketTcp *socket, const fp_socks5_reque
 			//<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 			ret = socket->send((char*) &bind_reply, nsend);
 			if (ret < 0 || ret != nsend) {
-				DEBUG_PRINTLN_ERR("send error", socket->getErrCode(), socket->getErrStr().c_str());
+				DEBUG_PRINTLN_ERR("send error", socket->getErrCode(), socket->getErrStr());
 				delete server_socket; // auto close().
 				return S5_REP_TERMINATED;
 			}
@@ -513,7 +513,7 @@ s5_method_t FP_Socks5::dealRequestUdp(FSocketTcp *socket, const fp_socks5_reques
 	do {
 		ret = udp_serv_socket.bind(NULL, 0); // ...
 		if (ret < 0) {
-			DEBUG_PRINTLN_ERR("bind error", udp_serv_socket.getErrCode(), udp_serv_socket.getErrStr().c_str());
+			DEBUG_PRINTLN_ERR("bind error", udp_serv_socket.getErrCode(), udp_serv_socket.getErrStr());
 			return S5_REP_FAILURE;
 		}
 		{
@@ -521,13 +521,13 @@ s5_method_t FP_Socks5::dealRequestUdp(FSocketTcp *socket, const fp_socks5_reques
 			unsigned int addr_len = sizeof(addr);
 			ret = ::getsockname(udp_serv_socket.getHandle(), (struct sockaddr*) &addr, &addr_len);
 			if (ret < 0) {
-				DEBUG_PRINTLN_ERR("getsockname error", FUtil::getErrCode(), FUtil::getErrStr().c_str());
+				DEBUG_PRINTLN_ERR("getsockname error", FUtil::getErrCode(), FUtil::getErrStr());
 				return S5_REP_FAILURE;
 			}
 			udp_serv_socket.setLocalAddress((struct sockaddr*) &addr);
 		}
 		if (udp_socket.createSocket()) {
-			DEBUG_PRINTLN_ERR("socket error", udp_serv_socket.getErrCode(), udp_serv_socket.getErrStr().c_str());
+			DEBUG_PRINTLN_ERR("socket error", udp_serv_socket.getErrCode(), udp_serv_socket.getErrStr());
 			return S5_REP_FAILURE;
 		}
 	} while (0);
@@ -550,7 +550,7 @@ s5_method_t FP_Socks5::dealRequestUdp(FSocketTcp *socket, const fp_socks5_reques
 	//<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 	ret = socket->send((char*) &bind_reply, nsend);
 	if (ret < 0 || ret != nsend) {
-		DEBUG_PRINTLN_ERR("send error", socket->getErrCode(), socket->getErrStr().c_str());
+		DEBUG_PRINTLN_ERR("send error", socket->getErrCode(), socket->getErrStr());
 		return S5_REP_TERMINATED;
 	}
 
@@ -576,7 +576,7 @@ s5_method_t FP_Socks5::dealRequestUdp(FSocketTcp *socket, const fp_socks5_reques
 		FD_SET(tcp_sid, &r_fds);
 		select_ret = ::select(nfds, &r_fds, NULL, NULL, NULL);
 		if (select_ret < 0) {
-			DEBUG_PRINTLN_ERR("select error", FUtil::getErrCode(), FUtil::getErrStr().c_str());
+			DEBUG_PRINTLN_ERR("select error", FUtil::getErrCode(), FUtil::getErrStr());
 			break;
 		} else if (select_ret == 0) { // should't happen here!
 			break;
@@ -588,7 +588,7 @@ s5_method_t FP_Socks5::dealRequestUdp(FSocketTcp *socket, const fp_socks5_reques
 				nrecv = udp_serv_socket.recvFrom((char*) &s5_udp,
 				S5_MAX_UDP_SIZE, (struct sockaddr*)&client_addr);
 				if (nrecv < 0) {
-					DEBUG_PRINTLN_ERR("recvfrom error", udp_serv_socket.getErrCode(), udp_serv_socket.getErrStr().c_str());
+					DEBUG_PRINTLN_ERR("recvfrom error", udp_serv_socket.getErrCode(), udp_serv_socket.getErrStr());
 					ret = -1;
 					break;
 				} else if (nrecv == 0) { // the peer has performed an orderly shutdown.
@@ -612,7 +612,7 @@ s5_method_t FP_Socks5::dealRequestUdp(FSocketTcp *socket, const fp_socks5_reques
 
 				ret = udp_socket.sendTo((char*) s5_udp.p_data, nrecv, dst_addr.c_str(), dst_port); // nrecv updated by parseAddrPort.
 				if (ret < 0 || ret != nrecv) {
-					DEBUG_PRINTLN_ERR("sendto error", udp_socket.getErrCode(), udp_socket.getErrStr().c_str());
+					DEBUG_PRINTLN_ERR("sendto error", udp_socket.getErrCode(), udp_socket.getErrStr());
 					ret = -1; // error and break;
 					break;
 				}
@@ -628,7 +628,7 @@ s5_method_t FP_Socks5::dealRequestUdp(FSocketTcp *socket, const fp_socks5_reques
 			nrecv = udp_socket.recvFrom((char*) &s5_udp, S5_MAX_UDP_SIZE, NULL);
 			DEBUG_MPRINT("server, nrecv= %d\n", nrecv);
 			if (nrecv < 0) {
-				DEBUG_PRINTLN_ERR("recvfrom error", udp_socket.getErrCode(), udp_socket.getErrStr().c_str());
+				DEBUG_PRINTLN_ERR("recvfrom error", udp_socket.getErrCode(), udp_socket.getErrStr());
 				break;
 			} else if (nrecv == 0) { // the peer has performed an orderly shutdown.
 				break;
@@ -639,7 +639,7 @@ s5_method_t FP_Socks5::dealRequestUdp(FSocketTcp *socket, const fp_socks5_reques
 
 			ret = udp_serv_socket.sendTo((char*) &s5_udp, nrecv, (struct sockaddr*)&client_addr);
 			if (ret < 0 || ret != nrecv) {
-				DEBUG_PRINTLN_ERR("sendto error", udp_serv_socket.getErrCode(), udp_serv_socket.getErrStr().c_str());
+				DEBUG_PRINTLN_ERR("sendto error", udp_serv_socket.getErrCode(), udp_serv_socket.getErrStr());
 				break;
 			}
 			--select_ret;

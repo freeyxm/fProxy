@@ -71,7 +71,7 @@ int FProtocol::onceRecvAndSend(FSocketTcp *recv_socket, FSocketTcp *send_socket,
 			if (errCode == EAGAIN || errCode == EWOULDBLOCK)
 				break;
 
-			DEBUG_PRINTLN_ERR("recv error", recv_socket->getErrCode(), recv_socket->getErrStr().c_str());
+			DEBUG_PRINTLN_ERR("recv error", recv_socket->getErrCode(), recv_socket->getErrStr());
 			ret = -1;
 			break;
 		}
@@ -84,7 +84,7 @@ int FProtocol::onceRecvAndSend(FSocketTcp *recv_socket, FSocketTcp *send_socket,
 		nsend = send_socket->send(buf, nrecv);
 		if (nsend < 0 || nsend != nrecv)
 		{
-			DEBUG_PRINTLN_ERR("send error", send_socket->getErrCode(), send_socket->getErrStr().c_str());
+			DEBUG_PRINTLN_ERR("send error", send_socket->getErrCode(), send_socket->getErrStr());
 			ret = -1;
 			break;
 		}
@@ -112,12 +112,12 @@ int FProtocol::loopRecvAndSend(FSocketTcp *socket1, FSocketTcp *socket2)
 
 	if (socket1->setBlockMode(0) < 0)
 	{
-		DEBUG_PRINTLN_ERR("setBlockMode error", socket1->getErrCode(), socket1->getErrStr().c_str());
+		DEBUG_PRINTLN_ERR("setBlockMode error", socket1->getErrCode(), socket1->getErrStr());
 		return -1;
 	}
 	if (socket2->setBlockMode(0) < 0)
 	{
-		DEBUG_PRINTLN_ERR("setBlockMode error", socket2->getErrCode(), socket2->getErrStr().c_str());
+		DEBUG_PRINTLN_ERR("setBlockMode error", socket2->getErrCode(), socket2->getErrStr());
 		return -1;
 	}
 
@@ -130,7 +130,7 @@ int FProtocol::loopRecvAndSend(FSocketTcp *socket1, FSocketTcp *socket2)
 		select_ret = ::select(nfds, &r_fds, NULL, NULL, NULL);
 		if (select_ret < 0)
 		{
-			DEBUG_PRINTLN_ERR("select error", FUtil::getErrCode(), FUtil::getErrStr().c_str());
+			DEBUG_PRINTLN_ERR("select error", FUtil::getErrCode(), FUtil::getErrStr());
 			break;
 		}
 		else if (select_ret == 0)

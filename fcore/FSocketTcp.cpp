@@ -38,7 +38,7 @@ FSocketTcp* FSocketTcp::accept()
 	int ret = ::accept(this->m_sockfd, (struct sockaddr*) &addr, &length);
 	if (ret < 0)
 	{
-		DEBUG_PRINTLN_ERR("accept error", FUtil::getErrCode(), FUtil::getErrStr().c_str());
+		DEBUG_PRINTLN_ERR("accept error", FUtil::getErrCode(), FUtil::getErrStr());
 		return NULL;
 	}
 

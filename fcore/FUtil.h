@@ -23,8 +23,8 @@ public:
 	static void print_hex(FILE *out, const unsigned char *bytes, const int size, const int line_num);
 
 	static int getErrCode();
-	static string getErrStr(int errCode);
-	static string getErrStr();
+	static const char* getErrStr(int errCode);
+	static const char* getErrStr();
 };
 
 } /* namespace freeyxm */

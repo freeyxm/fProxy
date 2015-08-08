@@ -10,6 +10,7 @@
 #include <fcore/FSocketDomain4.h>
 #include <fcore/FSocketDomain6.h>
 #include <fcore/FLogger.h>
+#include <fcore/FUtil.h>
 #include <cstring>
 #include <ctime>
 #include <assert.h>
@@ -137,26 +138,12 @@ socklen_t FSocket::getAddrLen()
 
 int FSocket::getErrCode()
 {
-#ifdef __WIN32__
-	return ::WSAGetLastError();
-#else
-	return errno;
-#endif
+	return FUtil::getErrCode(); // need to repair!!!
 }
 
-string FSocket::getErrStr()
+const char* FSocket::getErrStr()
 {
-#ifdef __WIN32__
-	const int BUF_SIZE = 1024;
-	char buf[BUF_SIZE + 1];
-	buf[BUF_SIZE] = '\0';
-	FormatMessage(FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_IGNORE_INSERTS,
-			NULL, this->getErrCode(), MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT),
-			buf, BUF_SIZE, NULL);
-	return buf;
-#else
-	return ::strerror(errno);
-#endif
+	return FUtil::getErrStr(); // need to repair!!!
 }
 
 int FSocket::setSockaddr(struct sockaddr *pSockAddr, const char *addr, const in_port_t port)

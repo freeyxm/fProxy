@@ -56,22 +56,22 @@ int FUtil::getErrCode()
 #endif
 }
 
-string FUtil::getErrStr(int errCode)
+const char* FUtil::getErrStr(int errCode)
 {
+	const int BUF_SIZE = 128;
 #ifdef __WIN32__
-	const int BUF_SIZE = 1024;
-	char buf[BUF_SIZE + 1];
-	buf[BUF_SIZE] = '\0';
+	static __declspec(thread) char buf[BUF_SIZE] = "";
 	FormatMessage(FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_IGNORE_INSERTS,
 			NULL, errCode,
 			MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT), buf, BUF_SIZE, NULL);
 	return buf;
 #else
-	return ::strerror(errCode);
+	static __thread char buf[BUF_SIZE] = "";
+	return ::strerror_r(errCode, buf, BUF_SIZE);
 #endif
 }
 
-string FUtil::getErrStr()
+const char* FUtil::getErrStr()
 {
 #ifdef __WIN32__
 	return FUtil::getErrStr(FUtil::getErrCode());

@@ -51,7 +51,7 @@ int FThreadPool::createThead()
 	}
 	else
 	{
-		LOG_PRINTLN_ERR("create thread error", ret, FUtil::getErrStr(ret).c_str());
+		LOG_PRINTLN_ERR("create thread error", ret, FUtil::getErrStr(ret));
 	}
 	return ret;
 }
@@ -68,7 +68,7 @@ int FThreadPool::cancelThread(pthread_t tid)
 	}
 	else
 	{
-		LOG_PRINTLN_ERR("cancel thread error", ret, FUtil::getErrStr(ret).c_str());
+		LOG_PRINTLN_ERR("cancel thread error", ret, FUtil::getErrStr(ret));
 	}
 	return ret;
 }

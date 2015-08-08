@@ -111,7 +111,7 @@ int FP_Socks5_2::methodSelect()
 	int nrecv = m_pSocket->recv((char*) &request, sizeof(request));
 	if (nrecv < 0)
 	{
-		DEBUG_PRINTLN_ERR("recv error", m_pSocket->getErrCode(), m_pSocket->getErrStr().c_str());
+		DEBUG_PRINTLN_ERR("recv error", m_pSocket->getErrCode(), m_pSocket->getErrStr());
 		return -1;
 	}
 	else if (nrecv < METHOD_REQUEST_MIN_LEN)
@@ -134,7 +134,7 @@ int FP_Socks5_2::methodSelect()
 	int nsend = m_pSocket->send((const char*) &reply, sizeof(reply));
 	if (nsend < 0 || nsend != sizeof(reply))
 	{
-		DEBUG_PRINTLN_ERR("send error", m_pSocket->getErrCode(), m_pSocket->getErrStr().c_str());
+		DEBUG_PRINTLN_ERR("send error", m_pSocket->getErrCode(), m_pSocket->getErrStr());
 		return -1;
 	}
 
@@ -178,7 +178,7 @@ int FP_Socks5_2::authUnPw()
 	int nrecv = m_pSocket->recv((char*) &request, sizeof(request));
 	if (nrecv < 0)
 	{
-		DEBUG_PRINTLN_ERR("recv error", m_pSocket->getErrCode(), m_pSocket->getErrStr().c_str());
+		DEBUG_PRINTLN_ERR("recv error", m_pSocket->getErrCode(), m_pSocket->getErrStr());
 		return -1;
 	}
 	else if (nrecv < METHOD_UNPW_REQUEST_MIN_LEN)
@@ -200,7 +200,7 @@ int FP_Socks5_2::authUnPw()
 	int nsend = m_pSocket->send((const char*) &reply, sizeof(reply));
 	if (nsend < 0 || nsend != sizeof(reply))
 	{
-		DEBUG_PRINTLN_ERR("send error", m_pSocket->getErrCode(), m_pSocket->getErrStr().c_str());
+		DEBUG_PRINTLN_ERR("send error", m_pSocket->getErrCode(), m_pSocket->getErrStr());
 		return -1;
 	}
 
@@ -226,7 +226,7 @@ int FP_Socks5_2::doRequest()
 	int nrecv = m_pSocket->recv((char*) &request, sizeof(request));
 	if (nrecv < 0)
 	{
-		DEBUG_PRINTLN_ERR("recv error", m_pSocket->getErrCode(), m_pSocket->getErrStr().c_str());
+		DEBUG_PRINTLN_ERR("recv error", m_pSocket->getErrCode(), m_pSocket->getErrStr());
 		return -1;
 	}
 	else if (nrecv == 0)
@@ -298,7 +298,7 @@ int FP_Socks5_2::doRequestConnect(const Address &address)
 		if (serv_socket->connect(address.addr.c_str(), address.port) < 0)
 		{
 			rep = ReplyCode::REPLY_HOST_UNREACHABLE;
-			DEBUG_PRINTLN_ERR("connect error", serv_socket->getErrCode(), serv_socket->getErrStr().c_str());
+			DEBUG_PRINTLN_ERR("connect error", serv_socket->getErrCode(), serv_socket->getErrStr());
 			break;
 		}
 
@@ -331,7 +331,7 @@ int FP_Socks5_2::doRequestConnect(const Address &address)
 		if (nsend < 0 || nsend != sendNum)
 		{
 			rep = ReplyCode::REPLY_TERMINATE;
-			DEBUG_PRINTLN_ERR("send error", m_pSocket->getErrCode(), m_pSocket->getErrStr().c_str());
+			DEBUG_PRINTLN_ERR("send error", m_pSocket->getErrCode(), m_pSocket->getErrStr());
 			break;
 		}
 
@@ -363,7 +363,7 @@ int FP_Socks5_2::sendRequestReply(Byte replyCode)
 	int nsend = m_pSocket->send((const char*) &reply, 3);
 	if (nsend < 0 || nsend != 3)
 	{
-		DEBUG_PRINTLN_ERR("send error", m_pSocket->getErrCode(), m_pSocket->getErrStr().c_str());
+		DEBUG_PRINTLN_ERR("send error", m_pSocket->getErrCode(), m_pSocket->getErrStr());
 		return -1;
 	}
 	return 0;

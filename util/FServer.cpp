@@ -55,7 +55,7 @@ int FServer::init()
 	{
 		if (::sem_init(&m_maxConnNumSem, 0, m_maxConnNum) < 0)
 		{
-			LOG_PRINTLN_ERR("sem_init error", FUtil::getErrCode(), FUtil::getErrStr().c_str());
+			LOG_PRINTLN_ERR("sem_init error", FUtil::getErrCode(), FUtil::getErrStr());
 			return -1;
 		}
 	}
@@ -136,13 +136,13 @@ int FServer::run()
 	int ret = m_serverSocket.bind(this->m_addr.empty() ? NULL : this->m_addr.c_str(), (in_port_t) this->m_port);
 	if (ret < 0)
 	{
-		LOG_PRINTLN_ERR("server bind error", m_serverSocket.getErrCode(), m_serverSocket.getErrStr().c_str());
+		LOG_PRINTLN_ERR("server bind error", m_serverSocket.getErrCode(), m_serverSocket.getErrStr());
 		return ret;
 	}
 	ret = m_serverSocket.listen(m_listenQueueLen);
 	if (ret < 0)
 	{
-		LOG_PRINTLN_ERR("server listen error", m_serverSocket.getErrCode(), m_serverSocket.getErrStr().c_str());
+		LOG_PRINTLN_ERR("server listen error", m_serverSocket.getErrCode(), m_serverSocket.getErrStr());
 		return ret;
 	}
 
@@ -181,7 +181,7 @@ int FServer::loop()
 			{
 				continue;
 			}
-			LOG_PRINTLN_ERR("server accept error", m_serverSocket.getErrCode(), m_serverSocket.getErrStr().c_str());
+			LOG_PRINTLN_ERR("server accept error", m_serverSocket.getErrCode(), m_serverSocket.getErrStr());
 			return -1;
 		}
 	}
