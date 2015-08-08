@@ -585,8 +585,8 @@ s5_method_t FP_Socks5::dealRequestUdp(FSocketTcp *socket, const fp_socks5_reques
 		if (select_ret && FD_ISSET(udp_serv_sid, &r_fds)) {
 			do {
 				ret = 0;
-				nrecv = udp_serv_socket.recvFrom((char*) &s5_udp,
-				S5_MAX_UDP_SIZE, (struct sockaddr*)&client_addr);
+				socklen_t addrLen = 0;
+				nrecv = udp_serv_socket.recvFrom((char*) &s5_udp, S5_MAX_UDP_SIZE, (struct sockaddr*)&client_addr, &addrLen);
 				if (nrecv < 0) {
 					DEBUG_PRINTLN_ERR("recvfrom error", udp_serv_socket.getErrCode(), udp_serv_socket.getErrStr());
 					ret = -1;
@@ -625,7 +625,7 @@ s5_method_t FP_Socks5::dealRequestUdp(FSocketTcp *socket, const fp_socks5_reques
 			--select_ret;
 		} // end if
 		if (select_ret && FD_ISSET(udp_sid, &r_fds)) {
-			nrecv = udp_socket.recvFrom((char*) &s5_udp, S5_MAX_UDP_SIZE, NULL);
+			nrecv = udp_socket.recvFrom((char*) &s5_udp, S5_MAX_UDP_SIZE, NULL, NULL);
 			DEBUG_MPRINT("server, nrecv= %d\n", nrecv);
 			if (nrecv < 0) {
 				DEBUG_PRINTLN_ERR("recvfrom error", udp_socket.getErrCode(), udp_socket.getErrStr());
@@ -637,7 +637,7 @@ s5_method_t FP_Socks5::dealRequestUdp(FSocketTcp *socket, const fp_socks5_reques
 				break;
 			}
 
-			ret = udp_serv_socket.sendTo((char*) &s5_udp, nrecv, (struct sockaddr*)&client_addr);
+			ret = udp_serv_socket.sendTo((char*) &s5_udp, nrecv, (struct sockaddr*)&client_addr, sizeof(client_addr));
 			if (ret < 0 || ret != nrecv) {
 				DEBUG_PRINTLN_ERR("sendto error", udp_serv_socket.getErrCode(), udp_serv_socket.getErrStr());
 				break;

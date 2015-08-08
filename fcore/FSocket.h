@@ -36,6 +36,12 @@ public:
 	virtual int connect(const char *addr, const in_port_t port);
 	virtual void close();
 
+	virtual int recv(char *buf, const size_t size, int flags = 0);
+	virtual int send(const char *buf, const size_t size, int flags = 0);
+
+	virtual int recvAll(char *buf, const size_t size, int flags = 0, size_t *pRecv = NULL);
+	virtual int sendAll(const char *buf, const size_t size, int flags = 0, size_t *pSend = NULL);
+
 	int getHandle();
 
 	int setBlockMode(bool block);

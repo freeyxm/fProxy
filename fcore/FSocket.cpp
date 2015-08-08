@@ -48,7 +48,12 @@ FSocket::~FSocket()
 
 int FSocket::createSocket()
 {
-	return m_pSocketDomain->createSocket();
+	int ret = m_pSocketDomain->createSocket();
+	if (ret == 0)
+	{
+		m_sockfd = m_pSocketDomain->getSocketFd();
+	}
+	return ret;
 }
 
 int FSocket::bind(const char *addr, const in_port_t port)
@@ -77,6 +82,66 @@ void FSocket::close()
 	{
 		m_pSocketDomain->close();
 	}
+}
+
+int FSocket::recv(char *buf, const size_t size, int flags)
+{
+	return ::recv(this->m_sockfd, buf, size, flags);
+}
+
+int FSocket::send(const char *buf, const size_t size, int flags)
+{
+	return ::send(this->m_sockfd, buf, size, flags);
+}
+
+int FSocket::recvAll(char *buf, const size_t size, int flags, size_t *pRecv)
+{
+	int nrecv = 0;
+	size_t ntotal = 0;
+
+	while (ntotal < size)
+	{
+		nrecv = ::recv(this->m_sockfd, buf + ntotal, size - ntotal, flags);
+		if (nrecv < 0)
+		{
+			break;
+		}
+		else if (nrecv == 0) // socket closed.
+		{
+			break;
+		}
+		ntotal += nrecv;
+	}
+
+	if (pRecv != NULL)
+	{
+		*pRecv = ntotal;
+	}
+
+	return nrecv <= 0 ? nrecv : ntotal;
+}
+
+int FSocket::sendAll(const char *buf, const size_t size, int flags, size_t *pSend)
+{
+	int nsend = 0;
+	size_t ntotal = 0;
+
+	while (ntotal < size)
+	{
+		nsend = ::send(this->m_sockfd, buf + ntotal, size - ntotal, flags);
+		if (nsend < 0)
+		{
+			break;
+		}
+		ntotal += nsend;
+	}
+
+	if (pSend != NULL)
+	{
+		*pSend = ntotal;
+	}
+
+	return nsend <= 0 ? nsend : ntotal;
 }
 
 int FSocket::getHandle()
@@ -111,14 +176,14 @@ int FSocket::setTimeout(bool send_flag, int sec, long usec)
 	return ::setsockopt(this->m_sockfd, SOL_SOCKET, optname, (char*) &time, sizeof(time));
 }
 
-sockaddr* FSocket::getRemoteAddress()
-{
-	return m_pSocketDomain->getRemoteAddress();
-}
-
 sockaddr* FSocket::getLocalAddress()
 {
 	return m_pSocketDomain->getLocalAddress();
+}
+
+sockaddr* FSocket::getRemoteAddress()
+{
+	return m_pSocketDomain->getRemoteAddress();
 }
 
 void FSocket::setLocalAddress(const sockaddr* addr)
@@ -157,10 +222,11 @@ int FSocket::setSockaddr(struct sockaddr *pSockAddr, const char *addr, const in_
 		return -1;
 	}
 
+	socklen_t arrdLen = res->ai_addrlen;
 	::memcpy(pSockAddr, res->ai_addr, res->ai_addrlen);
 	::freeaddrinfo(res);
 
-	return 0;
+	return arrdLen;
 }
 
 } /* namespace freeyxm */

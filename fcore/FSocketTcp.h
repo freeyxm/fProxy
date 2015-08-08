@@ -20,12 +20,6 @@ public:
 	int listen(const int n = 10);
 	FSocketTcp* accept();
 
-	int recv(char *buf, const size_t size);
-	int send(const char *buf, const size_t size);
-
-	int recvAll(char *buf, const size_t size, size_t *pRecv = NULL);
-	int sendAll(const char *buf, const size_t size, size_t *pSend = NULL);
-
 	int readLine(string &line, const string line_delimiter);
 };
 

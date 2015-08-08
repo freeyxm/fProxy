@@ -19,13 +19,16 @@ public:
 
 	int createSocket();
 
-	int recvFrom(char *buf, const size_t size, struct sockaddr *addr);
-	int sendTo(const char *buf, const size_t size, const struct sockaddr *addr);
+	int recvFrom(char *buf, const size_t size, struct sockaddr *addr, socklen_t *addrLen);
+	int sendTo(const char *buf, const size_t size, const struct sockaddr *addr, const socklen_t addrLen);
 
 	int recvFrom(char *buf, const size_t size);
 	int sendTo(const char *buf, const size_t size);
 
-	int sendTo(const char *buf, const size_t size, const char *host, const unsigned int port);
+	int sendTo(const char *buf, const size_t size, const char *host, const in_port_t port);
+
+protected:
+	socklen_t m_remoteAddrLen;
 };
 
 } /* namespace freeyxm */

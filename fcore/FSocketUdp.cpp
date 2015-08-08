@@ -13,7 +13,7 @@ namespace freeyxm {
 FSocketUdp::FSocketUdp(int domain) :
 		FSocket(domain, SOCK_DGRAM)
 {
-	// TODO Auto-generated constructor stub
+	m_remoteAddrLen = this->getAddrLen();
 }
 
 FSocketUdp::~FSocketUdp()
@@ -26,35 +26,35 @@ int FSocketUdp::createSocket()
 	return FSocket::createSocket();
 }
 
-int FSocketUdp::recvFrom(char *buf, const size_t size, struct sockaddr *addr)
+int FSocketUdp::recvFrom(char *buf, const size_t size, struct sockaddr *addr, socklen_t *addrLen)
 {
-	unsigned int addrLen = this->getAddrLen();
-	return ::recvfrom(this->m_sockfd, buf, size, 0, addr, &addrLen);
+	return ::recvfrom(this->m_sockfd, buf, size, 0, addr, addrLen);
 }
 
-int FSocketUdp::sendTo(const char *buf, const size_t size, const struct sockaddr *addr)
+int FSocketUdp::sendTo(const char *buf, const size_t size, const struct sockaddr *addr, const socklen_t addrLen)
 {
-	return ::sendto(this->m_sockfd, buf, size, 0, addr, this->getAddrLen());
+	return ::sendto(this->m_sockfd, buf, size, 0, addr, addrLen);
 }
 
 int FSocketUdp::recvFrom(char *buf, const size_t size)
 {
-	return this->recvFrom(buf, size, this->getRemoteAddress());
+	return this->recvFrom(buf, size, this->getRemoteAddress(), &m_remoteAddrLen);
 }
 
 int FSocketUdp::sendTo(const char *buf, const size_t size)
 {
-	return this->sendTo(buf, size, this->getRemoteAddress());
+	return this->sendTo(buf, size, this->getRemoteAddress(), m_remoteAddrLen);
 }
 
-int FSocketUdp::sendTo(const char *buf, const size_t size, const char *host, const unsigned int port)
+int FSocketUdp::sendTo(const char *buf, const size_t size, const char *host, const in_port_t port)
 {
-//	if (this->setSockaddr(this->remoteAddress, this->sin_family, host, port)) {
-//		return -1;
-//	}
-//	return this->sendTo(buf, size, &this->remoteAddress);
-	assert(false);
-	return -1;
+	int addrLen = this->setSockaddr(this->getRemoteAddress(), host, port);
+	if (addrLen < 0)
+	{
+		return -1;
+	}
+	m_remoteAddrLen = addrLen;
+	return this->sendTo(buf, size, this->getRemoteAddress(), m_remoteAddrLen);
 }
 
 } /* namespace freeyxm */
