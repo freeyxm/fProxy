@@ -63,7 +63,7 @@ void conenctServr(void*) {
 	while (g_count < 30000) {
 		int ret = socket.connect("127.0.0.1", 2012);
 		if (ret) {
-			DEBUG_PRINTLN_ERR("connect error!", socket.getErrCode(), socket.getErrStr());
+			ELOGM_PRINTLN_ERR("connect error!", socket.getErrCode(), socket.getErrStr());
 			break;
 		} else {
 			char buf[1024];

@@ -47,11 +47,11 @@ int FThreadPool::createThead()
 	{
 		m_idle.insert(tid);
 		++m_size;
-		DEBUG_PRINT_T("create thread %lu, current size = %lu\n", tid, m_size);
+		DLOGM_PRINT_T("create thread %lu, current size = %lu\n", tid, m_size);
 	}
 	else
 	{
-		LOG_PRINTLN_ERR("create thread error", ret, FUtil::getErrStr(ret));
+		ELOGM_PRINTLN_ERR("create thread error", ret, FUtil::getErrStr(ret));
 	}
 	return ret;
 }
@@ -64,11 +64,11 @@ int FThreadPool::cancelThread(pthread_t tid)
 		m_idle.erase(tid);
 		m_busy.erase(tid);
 		--m_size;
-		DEBUG_PRINT_T("cancel thread %lu, current size = %lu\n", tid, m_size);
+		DLOGM_PRINT_T("cancel thread %lu, current size = %lu\n", tid, m_size);
 	}
 	else
 	{
-		LOG_PRINTLN_ERR("cancel thread error", ret, FUtil::getErrStr(ret));
+		ELOGM_PRINTLN_ERR("cancel thread error", ret, FUtil::getErrStr(ret));
 	}
 	return ret;
 }
@@ -226,7 +226,7 @@ void FThreadPool::setTaskQueueSize(size_t maxSize)
 void FThreadPool::printStatus()
 {
 	pthread_mutex_lock(&m_mutex);
-	LOG_PRINT_T("[pool] maxSize: %lu, size: %lu, busy: %lu, idle: %lu, task: %lu\n", m_maxSize, m_size, m_busy.size(),
+	DLOGM_PRINT_T("[pool] maxSize: %lu, size: %lu, busy: %lu, idle: %lu, task: %lu\n", m_maxSize, m_size, m_busy.size(),
 			m_idle.size(), m_tasks.size());
 	pthread_mutex_unlock(&m_mutex);
 }

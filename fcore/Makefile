@@ -1,8 +1,8 @@
 INCLUDES = -I../
 #LIBS = -lpthreadGC2 -lwsock32 -lws2_32
-MACROS = -D_DEBUG_ -D_LOG_MUTEX_ #-D__WIN32__
+MACROS = -D_DEBUG_ -D_LOG_MUTEX_ -DLOG_LEVEL=3 #-D__WIN32__
 CXX = g++
-CXXFLAGS = -g -O0 -Wall -fmessage-length=0 $(INCLUDES) $(MACROS)
+CXXFLAGS = -g -O0 -Wall -fmessage-length=0 -std=c++11 $(INCLUDES) $(MACROS)
 LDFLAGS =
 OBJS = FSocket.o FSocketDomain.o FSocketDomain4.o FSocketDomain6.o FSocketTcp.o FSocketUdp.o FThread.o FUtil.o FLogger.o FPmTest.o FString.o FThreadPool.o FThreadTask.o FPtrMgr.o
 SRCS = ${OBJS:%.o=%.cpp}

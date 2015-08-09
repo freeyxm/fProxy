@@ -111,18 +111,18 @@ int FP_Socks5_2::methodSelect()
 	int nrecv = m_pSocket->recv((char*) &request, sizeof(request));
 	if (nrecv < 0)
 	{
-		DEBUG_PRINTLN_ERR("recv error", m_pSocket->getErrCode(), m_pSocket->getErrStr());
+		DLOGM_PRINTLN_ERR("recv error", m_pSocket->getErrCode(), m_pSocket->getErrStr());
 		return -1;
 	}
 	else if (nrecv < METHOD_REQUEST_MIN_LEN)
 	{
-		DEBUG_PRINTLN_MSG("Bad request: method_request len < METHOD_REQUEST_MIN_LEN!");
+		DLOGM_PRINTLN_MSG("Bad request: method_request len < METHOD_REQUEST_MIN_LEN!");
 		return -1;
 	}
 
 	if (request.ver != S5_VERSION)
 	{
-		DEBUG_PRINTLN_MSG("Bad request: method_request ver illegal!");
+		DLOGM_PRINTLN_MSG("Bad request: method_request ver illegal!");
 		return -1;
 	}
 
@@ -134,7 +134,7 @@ int FP_Socks5_2::methodSelect()
 	int nsend = m_pSocket->send((const char*) &reply, sizeof(reply));
 	if (nsend < 0 || nsend != sizeof(reply))
 	{
-		DEBUG_PRINTLN_ERR("send error", m_pSocket->getErrCode(), m_pSocket->getErrStr());
+		DLOGM_PRINTLN_ERR("send error", m_pSocket->getErrCode(), m_pSocket->getErrStr());
 		return -1;
 	}
 
@@ -178,18 +178,18 @@ int FP_Socks5_2::authUnPw()
 	int nrecv = m_pSocket->recv((char*) &request, sizeof(request));
 	if (nrecv < 0)
 	{
-		DEBUG_PRINTLN_ERR("recv error", m_pSocket->getErrCode(), m_pSocket->getErrStr());
+		DLOGM_PRINTLN_ERR("recv error", m_pSocket->getErrCode(), m_pSocket->getErrStr());
 		return -1;
 	}
 	else if (nrecv < METHOD_UNPW_REQUEST_MIN_LEN)
 	{
-		DEBUG_PRINTLN_MSG("Bad request: method_unpw_request len < METHOD_UNPW_REQUEST_MIN_LEN!");
+		DLOGM_PRINTLN_MSG("Bad request: method_unpw_request len < METHOD_UNPW_REQUEST_MIN_LEN!");
 		return -1;
 	}
 
 	if (request.ver != S5_SUB_NEGOTIATION_VER)
 	{
-		DEBUG_PRINTLN_MSG("Bad request: method_unpw_request ver illegal!");
+		DLOGM_PRINTLN_MSG("Bad request: method_unpw_request ver illegal!");
 		return -1;
 	}
 
@@ -200,7 +200,7 @@ int FP_Socks5_2::authUnPw()
 	int nsend = m_pSocket->send((const char*) &reply, sizeof(reply));
 	if (nsend < 0 || nsend != sizeof(reply))
 	{
-		DEBUG_PRINTLN_ERR("send error", m_pSocket->getErrCode(), m_pSocket->getErrStr());
+		DLOGM_PRINTLN_ERR("send error", m_pSocket->getErrCode(), m_pSocket->getErrStr());
 		return -1;
 	}
 
@@ -226,7 +226,7 @@ int FP_Socks5_2::doRequest()
 	int nrecv = m_pSocket->recv((char*) &request, sizeof(request));
 	if (nrecv < 0)
 	{
-		DEBUG_PRINTLN_ERR("recv error", m_pSocket->getErrCode(), m_pSocket->getErrStr());
+		DLOGM_PRINTLN_ERR("recv error", m_pSocket->getErrCode(), m_pSocket->getErrStr());
 		return -1;
 	}
 	else if (nrecv == 0)
@@ -236,13 +236,13 @@ int FP_Socks5_2::doRequest()
 	}
 	else if (nrecv < REQUEST_DETAIL_MIN_LEN)
 	{
-		DEBUG_PRINTLN_MSG("Bad request: request_detail len < REQUEST_DETAIL_MIN_LEN!");
+		DLOGM_PRINTLN_MSG("Bad request: request_detail len < REQUEST_DETAIL_MIN_LEN!");
 		return -1;
 	}
 
 	if (request.ver != S5_VERSION || request.rsv != S5_RESERVE)
 	{
-		DEBUG_PRINTLN_MSG("Bad request: request_detail ver illegal!");
+		DLOGM_PRINTLN_MSG("Bad request: request_detail ver illegal!");
 		return -1;
 	}
 
@@ -259,7 +259,7 @@ int FP_Socks5_2::doRequest(const request_detail_t& request, int nrecv)
 		return -1;
 	}
 
-	DEBUG_PRINT_T("request: cmd = %u, addr = %s, port = %d\n", request.cmd, address.addr.c_str(), address.port);
+	DLOGM_PRINT_T("request: cmd = %u, addr = %s, port = %d\n", request.cmd, address.addr.c_str(), address.port);
 
 	int rep = ReplyCode::REPLY_SUCCESS;
 	switch (request.cmd)
@@ -275,7 +275,7 @@ int FP_Socks5_2::doRequest(const request_detail_t& request, int nrecv)
 			break;
 		default:
 			rep = ReplyCode::REPLY_CMD_NOT_SUPPORTED;
-			DEBUG_PRINTLN_MSG("Bad request: request_detail cmd illegal!")
+			DLOGM_PRINTLN_MSG("Bad request: request_detail cmd illegal!")
 			;
 			return -1;
 	}
@@ -298,7 +298,7 @@ int FP_Socks5_2::doRequestConnect(const Address &address)
 		if (serv_socket->connect(address.addr.c_str(), address.port) < 0)
 		{
 			rep = ReplyCode::REPLY_HOST_UNREACHABLE;
-			DEBUG_PRINTLN_ERR("connect error", serv_socket->getErrCode(), serv_socket->getErrStr());
+			DLOGM_PRINTLN_ERR("connect error", serv_socket->getErrCode(), serv_socket->getErrStr());
 			break;
 		}
 
@@ -331,7 +331,7 @@ int FP_Socks5_2::doRequestConnect(const Address &address)
 		if (nsend < 0 || nsend != sendNum)
 		{
 			rep = ReplyCode::REPLY_TERMINATE;
-			DEBUG_PRINTLN_ERR("send error", m_pSocket->getErrCode(), m_pSocket->getErrStr());
+			DLOGM_PRINTLN_ERR("send error", m_pSocket->getErrCode(), m_pSocket->getErrStr());
 			break;
 		}
 
@@ -363,7 +363,7 @@ int FP_Socks5_2::sendRequestReply(Byte replyCode)
 	int nsend = m_pSocket->send((const char*) &reply, 3);
 	if (nsend < 0 || nsend != 3)
 	{
-		DEBUG_PRINTLN_ERR("send error", m_pSocket->getErrCode(), m_pSocket->getErrStr());
+		DLOGM_PRINTLN_ERR("send error", m_pSocket->getErrCode(), m_pSocket->getErrStr());
 		return -1;
 	}
 	return 0;
@@ -408,7 +408,7 @@ int FP_Socks5_2::parseAddrPort(const address_t& in_address, int nrecv, Address &
 		}
 			break;
 		default:
-			DEBUG_PRINTLN_MSG("Bad request: request_detail atyp illegal!")
+			DLOGM_PRINTLN_MSG("Bad request: request_detail atyp illegal!")
 			;
 			return ReplyCode::REPLY_FAILURE;
 			break;
@@ -416,7 +416,7 @@ int FP_Socks5_2::parseAddrPort(const address_t& in_address, int nrecv, Address &
 
 	if (!len_match)
 	{
-		DEBUG_PRINTLN_MSG("Bad request: request_detail len mismatch!");
+		DLOGM_PRINTLN_MSG("Bad request: request_detail len mismatch!");
 		return ReplyCode::REPLY_FAILURE;
 	}
 

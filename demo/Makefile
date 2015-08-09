@@ -2,9 +2,9 @@ LIB_DIR = ../libs
 INCLUDES = -I"../"
 #LIBS = -L./fprotocol -lfprotocol -L./fcore/ -lfcore -lpthreadGC2 -lwsock32 #-lws2_32
 LIBS = -L$(LIB_DIR) -lfprotocol -lfcore -lpthread
-MACROS = -D_DEBUG_ -D_LOG_MUTEX_ #-D__WIN32__
+MACROS = -D_DEBUG_ -D_LOG_MUTEX_ -DLOG_LEVEL=0 #-D__WIN32__
 CXX = g++
-CXXFLAGS = -g -O0 -Wall -fmessage-length=0 $(INCLUDES) $(MACROS)
+CXXFLAGS = -g -O0 -Wall -fmessage-length=0 -std=c++11 $(INCLUDES) $(MACROS)
 LDFLAGS = $(LIBS) #-mwindows
 OBJS = ../util/FServer.o ../util/FServerTask.o
 SRCS = ${OBJS:%.o=%.cpp} fProxy.cpp fClient.cpp test.cpp

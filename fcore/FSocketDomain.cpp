@@ -34,7 +34,7 @@ int FSocketDomain::createSocket(int protocol)
 	m_socketfd = ::socket(this->m_socketDomain, this->m_socketType, protocol);
 	if (m_socketfd == -1)
 	{
-		DEBUG_PRINTLN_ERR("create socket error", FUtil::getErrCode(), FUtil::getErrStr());
+		ELOGM_PRINTLN_ERR("create socket error", FUtil::getErrCode(), FUtil::getErrStr());
 		return -1;
 	}
 
@@ -52,6 +52,7 @@ int FSocketDomain::bind(const char *addr, const in_port_t port)
 	int ret = 0;
 	do
 	{
+		this->m_socketDomain = res->ai_family; // if domain set to AF_UNSPEC, here need to reassign it.
 		ret = createSocket(res->ai_protocol);
 		if (ret != 0)
 			break;
@@ -60,14 +61,14 @@ int FSocketDomain::bind(const char *addr, const in_port_t port)
 		ret = ::setsockopt(this->m_socketfd, SOL_SOCKET, SO_REUSEADDR, &optval, sizeof(optval));
 		if (ret != 0)
 		{
-			DEBUG_PRINTLN_ERR("setsockopt error", FUtil::getErrCode(), FUtil::getErrStr());
+			ELOGM_PRINTLN_ERR("setsockopt error", FUtil::getErrCode(), FUtil::getErrStr());
 			break;
 		}
 
 		ret = ::bind(this->m_socketfd, res->ai_addr, res->ai_addrlen);
 		if (ret != 0)
 		{
-			DEBUG_PRINTLN_ERR("bind error", FUtil::getErrCode(), FUtil::getErrStr());
+			ELOGM_PRINTLN_ERR("bind error", FUtil::getErrCode(), FUtil::getErrStr());
 			break;
 		}
 
@@ -91,6 +92,7 @@ int FSocketDomain::connect(const char *addr, const in_port_t port)
 	int ret = 0;
 	do
 	{
+		this->m_socketDomain = res->ai_family; // if domain set to AF_UNSPEC, here need to reassign it.
 		ret = createSocket(res->ai_protocol);
 		if (ret != 0)
 			break;
@@ -98,7 +100,7 @@ int FSocketDomain::connect(const char *addr, const in_port_t port)
 		ret = ::connect(this->m_socketfd, res->ai_addr, res->ai_addrlen);
 		if (ret != 0)
 		{
-			DEBUG_PRINTLN_ERR("connect error", FUtil::getErrCode(), FUtil::getErrStr());
+			ELOGM_PRINTLN_ERR("connect error", FUtil::getErrCode(), FUtil::getErrStr());
 			break;
 		}
 
@@ -116,11 +118,15 @@ void FSocketDomain::close()
 	if (this->m_socketfd != -1)
 	{
 #ifdef __WIN32__
-		::closesocket(this->m_socketfd);
+		int ret = ::closesocket(this->m_socketfd);
 #else
-		::close(this->m_socketfd);
+		int ret = ::close(this->m_socketfd);
 #endif
 		this->m_socketfd = -1;
+		if(ret != 0)
+		{
+			ELOGM_PRINTLN_ERR("close socket error", FUtil::getErrCode(), FUtil::getErrStr());
+		}
 	}
 }
 
@@ -153,7 +159,7 @@ int FSocketDomain::getAddrInfo(int domain, int type, const char *addr, const in_
 	int status = getaddrinfo(addr, port_str, &hints, res);
 	if (status != 0)
 	{
-		DEBUG_PRINTLN_ERR("getaddrinfo error", status, gai_strerror(status));
+		ELOGM_PRINTLN_ERR("getaddrinfo error", status, gai_strerror(status));
 		return -1;
 	}
 

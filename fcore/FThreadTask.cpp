@@ -47,7 +47,7 @@ void* FThreadTask::operator new(std::size_t size)
 		ptr = ::malloc(size);
 		if (!ptr)
 		{
-			DEBUG_PRINTLN_FL("malloc failed");
+			ELOGM_PRINTLN_FL("malloc failed");
 		}
 		else
 		{

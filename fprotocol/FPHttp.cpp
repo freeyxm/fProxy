@@ -43,7 +43,7 @@ int FPHttp::process(FSocketTcp *socket) {
 		string host;
 		int port;
 		if (0 == this->parseHostAndPort(uri, headers, host, port)) {
-			DEBUG_MPRINT(">>>Host: %s:%d\n", host.c_str(), port);
+			DLOGM_PRINT(">>>Host: %s:%d\n", host.c_str(), port);
 		}
 	}
 	socket->close();
@@ -75,7 +75,7 @@ int FPHttp::readAndParseCmd(FSocketTcp *socket) {
 	uri = FString::trim(line.substr(pos1 + 1, pos2 - pos1 - 1));
 	version = FString::trim(line.substr(pos2 + 1));
 
-	DEBUG_MPRINT(">>>CMD: method=%s,uri=%s,ver=%s.\n", method.c_str(), uri.c_str(), version.c_str());
+	DLOGM_PRINT(">>>CMD: method=%s,uri=%s,ver=%s.\n", method.c_str(), uri.c_str(), version.c_str());
 	return 1;
 }
 
@@ -98,7 +98,7 @@ int FPHttp::readHeaders(FSocketTcp *socket, header_map_t &headerMap) {
 		headerMap.insert(header_map_t::value_type(name, value));
 	}
 	for (header_map_t::iterator it = headerMap.begin(); it != headerMap.end(); ++it) {
-		DEBUG_MPRINT("%s: %s\n", it->first.c_str(), it->second.c_str());
+		DLOGM_PRINT("%s: %s\n", it->first.c_str(), it->second.c_str());
 	}
 	return 0;
 }

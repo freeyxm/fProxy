@@ -11,16 +11,23 @@ namespace freeyxm {
 
 pthread_mutex_t FLogger::log_mutex = PTHREAD_MUTEX_INITIALIZER;
 FILE* FLogger::out_stream = stdout;
+LogLevel FLogger::log_level = LogLevel::DEBUG;
 
-FLogger::FLogger() {
+FLogger::FLogger()
+{
 	// TODO Auto-generated constructor stub
 }
 
-FLogger::~FLogger() {
+FLogger::~FLogger()
+{
 	// TODO Auto-generated destructor stub
 }
 
-void FLogger::log(const char *fmt, ...) {
+void FLogger::log(LogLevel level, const char *fmt, ...)
+{
+	if (level < FLogger::log_level)
+		return;
+
 	va_list argptr;
 	va_start(argptr, fmt);
 
@@ -30,7 +37,11 @@ void FLogger::log(const char *fmt, ...) {
 	va_end(argptr);
 }
 
-void FLogger::log_t(const char *fmt, ...) {
+void FLogger::log_t(LogLevel level, const char *fmt, ...)
+{
+	if (level < FLogger::log_level)
+		return;
+
 	va_list argptr;
 	va_start(argptr, fmt);
 
@@ -46,7 +57,11 @@ void FLogger::log_t(const char *fmt, ...) {
 	va_end(argptr);
 }
 
-void FLogger::mlog(const char *fmt, ...) {
+void FLogger::logm(LogLevel level, const char *fmt, ...)
+{
+	if (level < FLogger::log_level)
+		return;
+
 	va_list argptr;
 	va_start(argptr, fmt);
 	log_lock();
@@ -58,7 +73,11 @@ void FLogger::mlog(const char *fmt, ...) {
 	va_end(argptr);
 }
 
-void FLogger::mlog_t(const char *fmt, ...) {
+void FLogger::logm_t(LogLevel level, const char *fmt, ...)
+{
+	if (level < FLogger::log_level)
+		return;
+
 	va_list argptr;
 	va_start(argptr, fmt);
 	log_lock();

@@ -43,19 +43,19 @@ int FServer::init()
 {
 	if (!this->m_funHandle)
 	{
-		LOG_PRINTLN_MSG("process function handle uninitialized! Please call setProcessFun first to init it!");
+		ELOGM_PRINTLN_MSG("process function handle uninitialized! Please call setProcessFun first to init it!");
 		return -1;
 	}
 	if (setSignal())
 	{
-		LOG_PRINTLN_MSG("set signal error!");
+		ELOGM_PRINTLN_MSG("set signal error!");
 		return -1;
 	}
 	if (m_maxConnNum > 0)
 	{
 		if (::sem_init(&m_maxConnNumSem, 0, m_maxConnNum) < 0)
 		{
-			LOG_PRINTLN_ERR("sem_init error", FUtil::getErrCode(), FUtil::getErrStr());
+			ELOGM_PRINTLN_ERR("sem_init error", FUtil::getErrCode(), FUtil::getErrStr());
 			return -1;
 		}
 	}
@@ -130,23 +130,23 @@ int FServer::run()
 {
 	if (!m_inited && init())
 	{
-		LOG_PRINTLN_MSG("server init failed!");
+		ELOGM_PRINTLN_MSG("server init failed!");
 		return -1;
 	}
 	int ret = m_serverSocket.bind(this->m_addr.empty() ? NULL : this->m_addr.c_str(), (in_port_t) this->m_port);
 	if (ret < 0)
 	{
-		LOG_PRINTLN_ERR("server bind error", m_serverSocket.getErrCode(), m_serverSocket.getErrStr());
+		ELOGM_PRINTLN_ERR("server bind error", m_serverSocket.getErrCode(), m_serverSocket.getErrStr());
 		return ret;
 	}
 	ret = m_serverSocket.listen(m_listenQueueLen);
 	if (ret < 0)
 	{
-		LOG_PRINTLN_ERR("server listen error", m_serverSocket.getErrCode(), m_serverSocket.getErrStr());
+		ELOGM_PRINTLN_ERR("server listen error", m_serverSocket.getErrCode(), m_serverSocket.getErrStr());
 		return ret;
 	}
 
-	DEBUG_MPRINT("server listening on %s:%d ...\n", this->m_addr.empty() ? "*" : this->m_addr.c_str(), this->m_port);
+	DLOGM_PRINT("server listening on %s:%d ...\n", this->m_addr.empty() ? "*" : this->m_addr.c_str(), this->m_port);
 
 	ret = this->loop();
 
@@ -163,7 +163,7 @@ int FServer::loop()
 	{
 		if (m_maxConnNum > 0 && ::sem_wait(&m_maxConnNumSem) < 0)
 		{
-			LOG_PRINTLN_MSG("sem_wait error!");
+			ELOGM_PRINTLN_MSG("sem_wait error!");
 			break;
 		}
 		//DEBUG_PRINTLN_MSG("waitting for connection ...");
@@ -181,7 +181,7 @@ int FServer::loop()
 			{
 				continue;
 			}
-			LOG_PRINTLN_ERR("server accept error", m_serverSocket.getErrCode(), m_serverSocket.getErrStr());
+			ELOGM_PRINTLN_ERR("server accept error", m_serverSocket.getErrCode(), m_serverSocket.getErrStr());
 			return -1;
 		}
 	}
@@ -192,7 +192,7 @@ void FServer::taskDone(FSocketTcp *p_socket)
 {
 	if (::sem_post(&m_maxConnNumSem) < 0)
 	{
-		LOG_PRINTLN_MSG("sem_post error!");
+		ELOGM_PRINTLN_MSG("sem_post error!");
 	}
 #if _DEBUG_
 	m_threadPool.printStatus();

@@ -8,6 +8,7 @@
 #ifndef FCORE_FLOGGER_H_
 #define FCORE_FLOGGER_H_
 
+#include "FLoggerMacro.h"
 #include <cstdio>
 #include <cstdarg>
 #include <ctime>
@@ -15,70 +16,31 @@
 
 namespace freeyxm {
 
-#define LOG_PRINT(fmt, ...) {\
-	fprintf(FLogger::getOutStream(), fmt, ##__VA_ARGS__);\
-	fflush(FLogger::getOutStream());\
-}
-
-#define LOG_PRINT_T(fmt, ...) {\
-	char str[20];\
-	time_t lt = time(NULL);\
-	struct tm *ptm = localtime(&lt);\
-	strftime(str, sizeof(str), "%F %T", ptm);\
-	fprintf(FLogger::getOutStream(), "[%s] ", str);\
-	LOG_PRINT(fmt, ##__VA_ARGS__);\
-}
-
-#define MLOG_PRINT(fmt, ...) {\
-	FLogger::log_lock();\
-	LOG_PRINT(fmt, ##__VA_ARGS__);\
-	FLogger::log_unlock();\
-}
-
-#define MLOG_PRINT_T(fmt, ...) {\
-	FLogger::log_lock();\
-	LOG_PRINT_T(fmt, ##__VA_ARGS__);\
-	FLogger::log_unlock();\
-}
-
-#ifdef _DEBUG_
-#define DEBUG_PRINT(fmt, ...) LOG_PRINT(fmt, ##__VA_ARGS__)
-#define DEBUG_PRINT_T(fmt, ...) LOG_PRINT_T(fmt, ##__VA_ARGS__)
-#define DEBUG_MPRINT(fmt, ...) MLOG_PRINT(fmt, ##__VA_ARGS__)
-#define DEBUG_MPRINT_T(fmt, ...) MLOG_PRINT_T(fmt, ##__VA_ARGS__)
-#else
-#define DEBUG_PRINT(fmt, ...) ;
-#define DEBUG_PRINT_T(fmt, ...) ;
-#define DEBUG_MPRINT(fmt, ...) ;
-#define DEBUG_MPRINT_T(fmt, ...) ;
-#endif
-
-#define DEBUG_PRINT_LOCK() FLogger::log_lock()
-#define DEBUG_PRINT_UNLOCK() FLogger::log_unlock()
-
-#define DEBUG_PRINTLN_MSG(msg) DEBUG_MPRINT_T("%s\n",msg)
-#define DEBUG_PRINTLN_FL(msg) DEBUG_MPRINT_T("%s[%d]: %s\n",__FILE__,__LINE__,msg)
-#define DEBUG_PRINTLN_ERR(msg,errcode,errstr) DEBUG_MPRINT_T("%s, ERR[%d]: %s\n",msg,errcode,errstr)
-
-#define LOG_PRINTLN_MSG(msg) FLogger::mlog_t("%s\n",msg)
-#define LOG_PRINTLN_FL(msg) FLogger::mlog_t("%s[%d]: %s\n",__FILE__,__LINE__,msg)
-#define LOG_PRINTLN_ERR(msg,errcode,errstr) FLogger::mlog_t("%s, ERR[%d]: %s\n",msg,errcode,errstr)
+enum class LogLevel {
+	DEBUG,
+	INFO,
+	WARN,
+	ERROR,
+};
 
 class FLogger {
+
 public:
 	FLogger();
 	virtual ~FLogger();
 
-	static void log(const char *fmt, ...);
-	static void log_t(const char *fmt, ...);
+	static void log(LogLevel level, const char *fmt, ...);
+	static void log_t(LogLevel level, const char *fmt, ...);
 
-	static void mlog(const char *fmt, ...);
-	static void mlog_t(const char *fmt, ...);
+	static void logm(LogLevel level, const char *fmt, ...);
+	static void logm_t(LogLevel level, const char *fmt, ...);
 
-	static void log_lock();
-	static void log_unlock();
+	inline static void log_lock();
+	inline static void log_unlock();
 
-	static FILE* getOutStream();
+	inline static FILE* getOutStream();
+
+	static LogLevel log_level;
 
 private:
 	static pthread_mutex_t log_mutex;
