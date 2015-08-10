@@ -9,7 +9,7 @@
 #include "fcore/FUtil.h"
 #include <cstring>
 #include <cstdlib>
-#if __linux__
+#ifdef __linux__
 #include <errno.h>
 #endif
 

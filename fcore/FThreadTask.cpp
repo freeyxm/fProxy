@@ -11,7 +11,7 @@
 
 namespace freeyxm {
 
-#if _DEBUG_
+#if defined(_DEBUG_) && defined(LOG_LEVEL) && LOG_LEVEL <= LOG_LEVEL_DEBUG
 #define PRINT_PTR_MGR_STATUS(tag) m_ptrMgr.printStatus(tag)
 #else
 #define PRINT_PTR_MGR_STATUS(tag) ;

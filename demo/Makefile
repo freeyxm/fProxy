@@ -2,7 +2,8 @@ LIB_DIR = ../libs
 INCLUDES = -I"../"
 #LIBS = -L./fprotocol -lfprotocol -L./fcore/ -lfcore -lpthreadGC2 -lwsock32 #-lws2_32
 LIBS = -L$(LIB_DIR) -lfprotocol -lfcore -lpthread
-MACROS = -D_DEBUG_ -D_LOG_MUTEX_ -DLOG_LEVEL=0 #-D__WIN32__
+#PLATFORM = -D__linux__ #-D__WIN32__
+MACROS = $(PLATFORM) -DLOG_LEVEL=0 -D_DEBUG_
 CXX = g++
 CXXFLAGS = -g -O0 -Wall -fmessage-length=0 -std=c++11 $(INCLUDES) $(MACROS)
 LDFLAGS = $(LIBS) #-mwindows

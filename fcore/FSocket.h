@@ -12,7 +12,7 @@
 #ifdef __WIN32__
 #include <winsock.h>
 #include <wininet.h>
-#elif __linux__
+#elif defined(__linux__)
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <netinet/in.h>

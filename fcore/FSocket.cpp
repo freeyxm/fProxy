@@ -14,7 +14,7 @@
 #include <cstring>
 #include <ctime>
 #include <assert.h>
-#if __linux__
+#ifdef __linux__
 #include <unistd.h>
 #include <errno.h>
 #include <netdb.h>

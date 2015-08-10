@@ -1,3 +1,5 @@
+export PLATFORM = -D__linux__ #-D__WIN32__
+
 all: 
 	cd fcore && make
 	cd fprotocol && make

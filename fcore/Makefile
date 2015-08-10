@@ -1,6 +1,7 @@
 INCLUDES = -I../
 #LIBS = -lpthreadGC2 -lwsock32 -lws2_32
-MACROS = -D_DEBUG_ -D_LOG_MUTEX_ -DLOG_LEVEL=3 #-D__WIN32__
+#PLATFORM = -D__linux__ #-D__WIN32__
+MACROS = $(PLATFORM) -DLOG_LEVEL=3 -D_DEBUG_
 CXX = g++
 CXXFLAGS = -g -O0 -Wall -fmessage-length=0 -std=c++11 $(INCLUDES) $(MACROS)
 LDFLAGS =

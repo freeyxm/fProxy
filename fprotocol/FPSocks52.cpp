@@ -9,7 +9,7 @@
 #include <fprotocol/FProtocol.h>
 #include <cstring>
 #include <tr1/memory>
-#if __linux__
+#ifdef __linux__
 #include <arpa/inet.h>
 #endif
 

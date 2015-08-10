@@ -11,7 +11,7 @@
 #include <string>
 #include <cstring>
 #include <algorithm>
-#if __linux__
+#ifdef __linux__
 #include <sys/socket.h>
 #include <arpa/inet.h>
 #endif
@@ -424,7 +424,7 @@ s5_method_t FP_Socks5::dealRequestBind(FSocketTcp *socket, const fp_socks5_reque
 		}
 		{
 			sockaddr_in addr;
-			unsigned int addr_len = sizeof(addr);
+			socklen_t addr_len = sizeof(addr);
 			ret = ::getsockname(bind_socket.getHandle(), (struct sockaddr*) &addr, &addr_len);
 			if (ret < 0) {
 				DLOGM_PRINTLN_ERR("getsockname error", FUtil::getErrCode(), FUtil::getErrStr());
@@ -518,7 +518,7 @@ s5_method_t FP_Socks5::dealRequestUdp(FSocketTcp *socket, const fp_socks5_reques
 		}
 		{
 			sockaddr_in addr;
-			unsigned int addr_len = sizeof(addr);
+			socklen_t addr_len = sizeof(addr);
 			ret = ::getsockname(udp_serv_socket.getHandle(), (struct sockaddr*) &addr, &addr_len);
 			if (ret < 0) {
 				DLOGM_PRINTLN_ERR("getsockname error", FUtil::getErrCode(), FUtil::getErrStr());

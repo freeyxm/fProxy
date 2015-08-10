@@ -11,7 +11,7 @@
 #include "fcore/FThread.h"
 #include <signal.h>
 #include <cstdlib>
-#if __linux__
+#ifdef __linux__
 #include <errno.h>
 #include <unistd.h>
 #endif
@@ -21,7 +21,7 @@ namespace freeyxm {
 static FServer *g_server;
 
 FServer::FServer(const string addr, const int port, const unsigned int max_conn_num) :
-		m_serverSocket(), m_threadPool(10, 200), m_addr(addr), m_port(port), m_maxConnNum(max_conn_num)
+		m_serverSocket(), m_threadPool(10, 200), m_addr(addr), m_port(port), m_maxConnNum(max_conn_num), m_maxConnNumSem(NULL)
 {
 	m_funHandle = NULL;
 	m_listenQueueLen = 10;

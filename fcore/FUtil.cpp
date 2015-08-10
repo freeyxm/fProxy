@@ -12,7 +12,7 @@
 #include <cstring>
 #ifdef __WIN32__
 #include <winbase.h>
-#elif __linux__
+#elif defined(__linux__)
 #include <errno.h>
 #endif
 
@@ -67,7 +67,18 @@ const char* FUtil::getErrStr(int errCode)
 	return buf;
 #else
 	static __thread char buf[BUF_SIZE] = "";
+#if __GNU_VISIBLE
 	return ::strerror_r(errCode, buf, BUF_SIZE);
+#else
+	int ret = ::strerror_r(errCode, buf, BUF_SIZE);
+	if(ret != 0)
+	{
+		int errCode = ret > 0 ? ret : getErrCode();
+		ELOGM_PRINTLN_ERR("strerror_r error", errCode, FUtil::getErrStr(errCode));
+		return NULL;
+	}
+	return buf;
+#endif
 #endif
 }
 
