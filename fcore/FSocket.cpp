@@ -25,7 +25,7 @@
 namespace freeyxm {
 
 FSocket::FSocket(int domain, int type) :
-		m_sockfd(-1), m_domain(domain), m_socktype(type)
+		m_sockfd(-1), m_domain(domain), m_socktype(type), m_pSocketDomain(NULL)
 {
 	initSocketDomain(domain, type);
 
