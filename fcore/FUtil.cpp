@@ -67,9 +67,7 @@ const char* FUtil::getErrStr(int errCode)
 	return buf;
 #else
 	static __thread char buf[BUF_SIZE] = "";
-#if __GNU_VISIBLE
-	return ::strerror_r(errCode, buf, BUF_SIZE);
-#else
+#if defined __USE_XOPEN2K && !defined __USE_GNU
 	int ret = ::strerror_r(errCode, buf, BUF_SIZE);
 	if(ret != 0)
 	{
@@ -78,6 +76,8 @@ const char* FUtil::getErrStr(int errCode)
 		return NULL;
 	}
 	return buf;
+#else
+	return ::strerror_r(errCode, buf, BUF_SIZE);
 #endif
 #endif
 }
