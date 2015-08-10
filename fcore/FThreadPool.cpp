@@ -47,7 +47,7 @@ int FThreadPool::createThead()
 	{
 		m_idle.insert(tid);
 		++m_size;
-		DLOGM_PRINT_T("create thread %lu, current size = %lu\n", tid, m_size);
+		DLOGM_PRINT_T("create thread %lu, current size = %lu\n", (long unsigned int)tid, m_size);
 	}
 	else
 	{
@@ -64,7 +64,7 @@ int FThreadPool::cancelThread(pthread_t tid)
 		m_idle.erase(tid);
 		m_busy.erase(tid);
 		--m_size;
-		DLOGM_PRINT_T("cancel thread %lu, current size = %lu\n", tid, m_size);
+		DLOGM_PRINT_T("cancel thread %lu, current size = %lu\n", (long unsigned int)tid, m_size);
 	}
 	else
 	{

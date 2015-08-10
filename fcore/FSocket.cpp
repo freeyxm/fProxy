@@ -25,12 +25,9 @@
 namespace freeyxm {
 
 FSocket::FSocket(int domain, int type) :
-		m_sockfd(-1)
+		m_sockfd(-1), m_domain(domain), m_socktype(type)
 {
-	if (domain == AF_INET6)
-		m_pSocketDomain = new FSocketDomain6(type);
-	else
-		m_pSocketDomain = new FSocketDomain4(type);
+	initSocketDomain(domain, type);
 
 	// Notice: winsock, before call socket(...), must call WSAStartup(...) first!
 }
@@ -46,8 +43,27 @@ FSocket::~FSocket()
 	}
 }
 
+bool FSocket::initSocketDomain(int domain, int type)
+{
+	if (m_pSocketDomain == NULL)
+	{
+		if (domain == AF_INET6)
+			m_pSocketDomain = new FSocketDomain6(type);
+		else if (domain == AF_INET)
+			m_pSocketDomain = new FSocketDomain4(type);
+		else
+			assert(domain == AF_UNSPEC);
+	}
+	return m_pSocketDomain != NULL;
+}
+
 int FSocket::createSocket()
 {
+	if (m_pSocketDomain == NULL)
+	{
+		ELOGM_PRINTLN_FL("m_pSocketDomain not init");
+		return -1;
+	}
 	int ret = m_pSocketDomain->createSocket();
 	if (ret == 0)
 	{
@@ -58,7 +74,23 @@ int FSocket::createSocket()
 
 int FSocket::bind(const char *addr, const in_port_t port)
 {
-	int ret = m_pSocketDomain->bind(addr, port);
+	int ret = -1;
+	if (m_pSocketDomain != NULL)
+	{
+		ret = m_pSocketDomain->bind(addr, port);
+	}
+	else if (m_domain == AF_UNSPEC)
+	{
+		struct addrinfo *res;
+		if (FSocketDomain::getAddrInfo(m_domain, m_socktype, addr, port, &res) == 0)
+		{
+			if (initSocketDomain(res->ai_family, res->ai_socktype))
+			{
+				ret = m_pSocketDomain->bind(res);
+			}
+			::freeaddrinfo(res);
+		}
+	}
 	if (ret == 0)
 	{
 		m_sockfd = m_pSocketDomain->getSocketFd();
@@ -68,7 +100,23 @@ int FSocket::bind(const char *addr, const in_port_t port)
 
 int FSocket::connect(const char *addr, const in_port_t port)
 {
-	int ret = m_pSocketDomain->connect(addr, port);
+	int ret = -1;
+	if (m_pSocketDomain != NULL)
+	{
+		ret = m_pSocketDomain->connect(addr, port);
+	}
+	else if (m_domain == AF_UNSPEC)
+	{
+		struct addrinfo *res;
+		if (FSocketDomain::getAddrInfo(m_domain, m_socktype, addr, port, &res) == 0)
+		{
+			if (initSocketDomain(res->ai_family, res->ai_socktype))
+			{
+				ret = m_pSocketDomain->connect(res);
+			}
+			::freeaddrinfo(res);
+		}
+	}
 	if (ret == 0)
 	{
 		m_sockfd = m_pSocketDomain->getSocketFd();

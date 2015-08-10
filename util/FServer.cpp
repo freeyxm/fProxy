@@ -21,7 +21,7 @@ namespace freeyxm {
 static FServer *g_server;
 
 FServer::FServer(const string addr, const int port, const unsigned int max_conn_num) :
-		m_serverSocket(), m_threadPool(10, 200), m_addr(addr), m_port(port), m_maxConnNum(max_conn_num), m_maxConnNumSem(NULL)
+		m_serverSocket(AF_INET6), m_threadPool(10, 200), m_addr(addr), m_port(port), m_maxConnNum(max_conn_num), m_maxConnNumSem(NULL)
 {
 	m_funHandle = NULL;
 	m_listenQueueLen = 10;
@@ -194,7 +194,7 @@ void FServer::taskDone(FSocketTcp *p_socket)
 	{
 		ELOGM_PRINTLN_MSG("sem_post error!");
 	}
-#if _DEBUG_
+#ifdef _DEBUG_
 	m_threadPool.printStatus();
 #endif
 }

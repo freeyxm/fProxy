@@ -20,8 +20,13 @@ public:
 	virtual ~FSocketDomain();
 
 	virtual int createSocket(int protocol = 0);
+
 	virtual int bind(const char *addr, const in_port_t port);
+	virtual int bind(struct addrinfo *addr);
+
 	virtual int connect(const char *addr, const in_port_t port);
+	virtual int connect(struct addrinfo *addr);
+
 	virtual void close();
 
 	struct sockaddr* getLocalAddress();

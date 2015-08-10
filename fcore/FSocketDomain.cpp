@@ -49,11 +49,19 @@ int FSocketDomain::bind(const char *addr, const in_port_t port)
 		return -1;
 	}
 
+	int ret = bind(res);
+
+	::freeaddrinfo(res);
+
+	return ret;
+}
+
+int FSocketDomain::bind(struct addrinfo *addr)
+{
 	int ret = 0;
 	do
 	{
-		this->m_socketDomain = res->ai_family; // if domain set to AF_UNSPEC, here need to reassign it.
-		ret = createSocket(res->ai_protocol);
+		ret = createSocket(addr->ai_protocol);
 		if (ret != 0)
 			break;
 
@@ -65,18 +73,24 @@ int FSocketDomain::bind(const char *addr, const in_port_t port)
 			break;
 		}
 
-		ret = ::bind(this->m_socketfd, res->ai_addr, res->ai_addrlen);
-		if (ret != 0)
+		ret = -1;
+		while (addr != NULL)
 		{
-			ELOGM_PRINTLN_ERR("bind error", FUtil::getErrCode(), FUtil::getErrStr());
+			ret = ::bind(this->m_socketfd, addr->ai_addr, addr->ai_addrlen);
+			if (ret != 0)
+			{
+				ELOGM_PRINTLN_ERR("bind error", FUtil::getErrCode(), FUtil::getErrStr());
+				addr = addr->ai_next;
+				continue;
+			}
 			break;
 		}
+		if (ret != 0)
+			break;
 
-		setLocalAddress(res->ai_addr);
+		setLocalAddress(addr->ai_addr);
 
 	} while (false);
-
-	::freeaddrinfo(res);
 
 	return ret == 0 ? 0 : -1;
 }
@@ -89,10 +103,18 @@ int FSocketDomain::connect(const char *addr, const in_port_t port)
 		return -1;
 	}
 
+	int ret = connect(res);
+
+	::freeaddrinfo(res);
+
+	return ret;
+}
+
+int FSocketDomain::connect(struct addrinfo *res)
+{
 	int ret = 0;
 	do
 	{
-		this->m_socketDomain = res->ai_family; // if domain set to AF_UNSPEC, here need to reassign it.
 		ret = createSocket(res->ai_protocol);
 		if (ret != 0)
 			break;
@@ -108,8 +130,6 @@ int FSocketDomain::connect(const char *addr, const in_port_t port)
 
 	} while (false);
 
-	::freeaddrinfo(res);
-
 	return ret == 0 ? 0 : -1;
 }
 
@@ -123,7 +143,7 @@ void FSocketDomain::close()
 		int ret = ::close(this->m_socketfd);
 #endif
 		this->m_socketfd = -1;
-		if(ret != 0)
+		if (ret != 0)
 		{
 			ELOGM_PRINTLN_ERR("close socket error", FUtil::getErrCode(), FUtil::getErrStr());
 		}
