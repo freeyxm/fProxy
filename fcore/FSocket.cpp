@@ -200,15 +200,17 @@ int FSocket::getHandle()
 int FSocket::setBlockMode(bool block)
 {
 #ifdef __WIN32__
-	u_long mode = block ? 1 : 0;
+	u_long mode = block ? 0 : 1;
 	if (::ioctlsocket(this->m_sockfd, FIONBIO, &mode))
 	{
+		ELOGM_PRINTLN_ERR("ioctl error", FUtil::getErrCode(), FUtil::getErrStr());
 		return -1;
 	}
 #else
-	int mode = block ? 1 : 0;
+	int mode = block ? 0 : 1;
 	if (::ioctl(this->m_sockfd, FIONBIO, &mode))
 	{
+		ELOGM_PRINTLN_ERR("ioctl error", FUtil::getErrCode(), FUtil::getErrStr());
 		return -1;
 	}
 #endif
@@ -221,7 +223,13 @@ int FSocket::setTimeout(bool send_flag, int sec, long usec)
 	struct timeval time;
 	time.tv_sec = sec;
 	time.tv_usec = usec;
-	return ::setsockopt(this->m_sockfd, SOL_SOCKET, optname, (char*) &time, sizeof(time));
+
+	int ret = ::setsockopt(this->m_sockfd, SOL_SOCKET, optname, (char*) &time, sizeof(time));
+	if (ret != 0)
+	{
+		ELOGM_PRINTLN_ERR("setsockopt error", FUtil::getErrCode(), FUtil::getErrStr());
+	}
+	return ret;
 }
 
 sockaddr* FSocket::getLocalAddress()

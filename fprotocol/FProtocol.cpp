@@ -58,76 +58,120 @@ void FProtocol::ntons(const unsigned short ns, char *p_ns)
  * onceRecvAndSend
  * return: 1, success; 0, recv_socket closed; -1, error.
  */
-int FProtocol::onceRecvAndSend(FSocketTcp *recv_socket, FSocketTcp *send_socket, char *buf, const int buf_size)
+int FProtocol::onceRecvAndSend(FSocketTcp *recv_socket, FSocketTcp *send_socket, bool send_flag, bool recv_flag)
 {
-	int nrecv = 0, nsend = 0;
-	int ret = 1;
+	static char __thread buf[RELAY_BUF_SIZE];
+	static int __thread send_num = 0, recv_num = 0;
+
+	int ret = Sock_Done;
+	int nsend = 0, nrecv = 0;
+	bool send_over = false, recv_over = false;
 	do
 	{
-		nrecv = recv_socket->recv(buf, buf_size);
-		if (nrecv < 0)
+		if (send_flag && !send_over)
 		{
-			int errCode = recv_socket->getErrCode();
-			if (errCode == EAGAIN || errCode == EWOULDBLOCK)
+			while (send_num < recv_num)
+			{
+				nsend = send_socket->send(buf + send_num, recv_num - send_num);
+				if (nsend < 0)
+				{
+					int errCode = send_socket->getErrCode();
+					if (errCode == EAGAIN || errCode == EWOULDBLOCK)
+					{
+						send_over = true;
+						break;
+					}
+					ret = Sock_Error;
+					DLOGM_PRINTLN_ERR("send error", send_socket->getErrCode(), send_socket->getErrStr());
+					break;
+				}
+				send_num += nsend;
+				//DLOGM_PRINT_T("send %d bytes: %d -> %d\n", nsend, recv_socket->getHandle(), send_socket->getHandle());
+			}
+			if (ret == Sock_Error)
+				break;
+			if (send_num >= recv_num)
+				send_num = recv_num = 0;
+		} // end send
+
+		if (recv_flag && !recv_over)
+		{
+			while (recv_num < RELAY_BUF_SIZE)
+			{
+				nrecv = recv_socket->recv(buf + recv_num, RELAY_BUF_SIZE - recv_num);
+				if (nrecv < 0)
+				{
+					int errCode = recv_socket->getErrCode();
+					if (errCode == EAGAIN || errCode == EWOULDBLOCK)
+					{
+						recv_over = true;
+						break;
+					}
+					ret = Sock_Error;
+					DLOGM_PRINTLN_ERR("recv error", recv_socket->getErrCode(), recv_socket->getErrStr());
+					break;
+				}
+				else if (nrecv == 0)
+				{
+					ret = Sock_CLosed;
+					break; // remote socket closed.
+				}
+				recv_num += nrecv;
+				//DLOGM_PRINT_T("recv %d bytes: %d -> %d\n", nrecv, recv_socket->getHandle(), send_socket->getHandle());
+			}
+
+			if (ret == Sock_Error || ret == Sock_CLosed)
 				break;
 
-			DLOGM_PRINTLN_ERR("recv error", recv_socket->getErrCode(), recv_socket->getErrStr());
-			ret = -1;
-			break;
-		}
-		else if (nrecv == 0)
-		{
-			ret = 0;
-			break; // remote socket closed.
-		}
+			if (send_num == 0 && recv_num > 0)
+				send_flag = true;
+		} // end recv
 
-		nsend = send_socket->send(buf, nrecv);
-		if (nsend < 0 || nsend != nrecv)
-		{
-			DLOGM_PRINTLN_ERR("send error", send_socket->getErrCode(), send_socket->getErrStr());
-			ret = -1;
-			break;
-		}
-
-		if (nrecv < buf_size)
+		if ((send_over || send_num >= recv_num) && (recv_over || recv_num >= RELAY_BUF_SIZE))
 			break;
 	} while (true);
 
+	if (ret == Sock_Error || ret == Sock_CLosed)
+	{
+		send_num = recv_num = 0;
+	}
+	else
+	{
+		if (send_num < recv_num)
+			ret |= Sock_Write;
+		if (recv_num < RELAY_BUF_SIZE)
+			ret |= Sock_Read;
+	}
 	return ret;
 }
 
-int FProtocol::loopRecvAndSend(FSocketTcp *socket1, FSocketTcp *socket2)
+int FProtocol::loopRecvAndSend(FSocketTcp *c_sock, FSocketTcp *s_sock)
 {
-	int c_sid = socket1->getHandle();
-	int s_sid = socket2->getHandle();
-	fd_set r_fds;
+	if (c_sock->setBlockMode(false) < 0)
+	{
+		DLOGM_PRINTLN_ERR("setBlockMode error", c_sock->getErrCode(), c_sock->getErrStr());
+		return -1;
+	}
+	if (s_sock->setBlockMode(false) < 0)
+	{
+		DLOGM_PRINTLN_ERR("setBlockMode error", s_sock->getErrCode(), s_sock->getErrStr());
+		return -1;
+	}
+
+	int c_sid = c_sock->getHandle();
+	int s_sid = s_sock->getHandle();
 	int nfds = c_sid > s_sid ? c_sid + 1 : s_sid + 1;
+	fd_set r_fds, w_fds;
 
-	std::tr1::shared_ptr<char> relay_buf(new char[RELAY_BUF_SIZE + 1]);
-	if (!relay_buf.get())
-	{
-		DLOGM_PRINTLN_MSG("new relay_buf failed!");
-		return -1;
-	}
-
-	if (socket1->setBlockMode(0) < 0)
-	{
-		DLOGM_PRINTLN_ERR("setBlockMode error", socket1->getErrCode(), socket1->getErrStr());
-		return -1;
-	}
-	if (socket2->setBlockMode(0) < 0)
-	{
-		DLOGM_PRINTLN_ERR("setBlockMode error", socket2->getErrCode(), socket2->getErrStr());
-		return -1;
-	}
+	FD_ZERO(&w_fds);
+	FD_ZERO(&r_fds);
+	FD_SET(c_sid, &r_fds);
+	FD_SET(s_sid, &r_fds);
 
 	int select_ret;
 	while (1)
 	{
-		FD_ZERO(&r_fds);
-		FD_SET(c_sid, &r_fds);
-		FD_SET(s_sid, &r_fds);
-		select_ret = ::select(nfds, &r_fds, NULL, NULL, NULL);
+		select_ret = ::select(nfds, &r_fds, &w_fds, NULL, NULL);
 		if (select_ret < 0)
 		{
 			DLOGM_PRINTLN_ERR("select error", FUtil::getErrCode(), FUtil::getErrStr());
@@ -138,17 +182,40 @@ int FProtocol::loopRecvAndSend(FSocketTcp *socket1, FSocketTcp *socket2)
 			break;
 		}
 
-		if (select_ret && FD_ISSET(c_sid, &r_fds))
+		bool client_recv = FD_ISSET(c_sid, &r_fds);
+		bool client_send = FD_ISSET(c_sid, &w_fds);
+		bool server_recv = FD_ISSET(s_sid, &r_fds);
+		bool server_send = FD_ISSET(s_sid, &w_fds);
+		FD_ZERO(&r_fds);
+		FD_ZERO(&w_fds);
+
+		if (client_recv || server_send)
 		{
-			if (FProtocol::onceRecvAndSend(socket1, socket2, relay_buf.get(), RELAY_BUF_SIZE) <= 0)
+			int ret = FProtocol::onceRecvAndSend(c_sock, s_sock, server_send, client_recv);
+			if (ret <= 0)
 				break;
-			--select_ret;
+			if (ret & Sock_Read)
+				FD_SET(c_sid, &r_fds);
+			if (ret & Sock_Write)
+				FD_SET(s_sid, &w_fds);
 		}
-		if (select_ret && FD_ISSET(s_sid, &r_fds))
+		else
 		{
-			if (FProtocol::onceRecvAndSend(socket2, socket1, relay_buf.get(), RELAY_BUF_SIZE) <= 0)
+			FD_SET(c_sid, &r_fds);
+		}
+		if (server_recv || client_send)
+		{
+			int ret = FProtocol::onceRecvAndSend(s_sock, c_sock, client_send, server_recv);
+			if (ret <= 0)
 				break;
-			--select_ret;
+			if (ret & Sock_Read)
+				FD_SET(s_sid, &r_fds);
+			if (ret & Sock_Write)
+				FD_SET(c_sid, &w_fds);
+		}
+		else
+		{
+			FD_SET(s_sid, &r_fds);
 		}
 	} // end while
 

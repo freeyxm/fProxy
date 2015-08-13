@@ -19,16 +19,16 @@ namespace freeyxm {
 #define LOG_PRINT_UNLOCK() FLogger::log_unlock()
 
 #define LOG_PRINT(fmt, ...) {\
-	fprintf(FLogger::getOutStream(), fmt, ##__VA_ARGS__);\
-	fflush(FLogger::getOutStream());\
+	::fprintf(FLogger::getOutStream(), fmt, ##__VA_ARGS__);\
+	::fflush(FLogger::getOutStream());\
 }
 
 #define LOG_PRINT_T(fmt, ...) {\
 	char str[20];\
-	time_t lt = time(NULL);\
-	struct tm *ptm = localtime(&lt);\
-	strftime(str, sizeof(str), "%F %T", ptm);\
-	fprintf(FLogger::getOutStream(), "[%s] ", str);\
+	time_t lt = ::time(NULL);\
+	struct tm *ptm = ::localtime(&lt);\
+	::strftime(str, sizeof(str), "%F %T", ptm);\
+	::fprintf(FLogger::getOutStream(), "[%s] ", str);\
 	LOG_PRINT(fmt, ##__VA_ARGS__);\
 }
 
