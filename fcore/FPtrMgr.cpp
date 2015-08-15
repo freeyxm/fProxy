@@ -118,7 +118,7 @@ void FPtrMgr<T>::printStatus(const char *tag)
 	pthread_mutex_lock(&m_mutex);
 	int free = m_free.size();
 	int busy = m_busy.size();
-	DLOG_PRINT_T("[%s] maxSize: %03lu, size: %d, busy: %d, free: %d\n", tag, m_maxSize, busy + free, busy, free);
+	DLOG_PRINT_T("[%s] size: %d, busy: %d, free: %d, SIZE: %lu\n", tag, busy + free, busy, free, m_maxSize);
 	pthread_mutex_unlock(&m_mutex);
 }
 

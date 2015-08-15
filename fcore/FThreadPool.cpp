@@ -12,9 +12,15 @@
 
 namespace freeyxm {
 
-FThreadPool::FThreadPool(size_t size, size_t maxSize) :
-		m_size(0), m_maxSize(maxSize), m_taskQueueSize(0), m_running(false)
+FThreadPool::FThreadPool(size_t size, size_t holeNum) :
+		m_size(0), m_taskQueueNum(holeNum), m_taskQueueSize(0), m_running(false)
 {
+	m_tasks = new std::list<FThreadTask*>[m_taskQueueNum];
+	m_tasksTemp = new std::list<FThreadTask*>[m_taskQueueNum];
+	m_taskLocks = new pthread_mutex_t[m_taskQueueNum];
+	m_taskConds = new pthread_cond_t[m_taskQueueNum];
+	m_taskCount.store(0);
+
 	init();
 	createTheads(size);
 }
@@ -22,14 +28,42 @@ FThreadPool::FThreadPool(size_t size, size_t maxSize) :
 FThreadPool::~FThreadPool()
 {
 	pthread_mutex_destroy(&m_mutex);
-	pthread_cond_destroy(&m_cond);
 	pthread_attr_destroy(&m_attr);
+
+	for (size_t i = 0; i < m_taskQueueNum; ++i)
+	{
+		std::list<FThreadTask*>::iterator it = m_tasks[i].begin();
+		while (it != m_tasks[i].end())
+		{
+			delete *it;
+		}
+		m_tasks[i].clear();
+
+		it = m_tasksTemp[i].begin();
+		while (it != m_tasksTemp[i].end())
+		{
+			delete *it;
+		}
+		m_tasksTemp[i].clear();
+
+		pthread_mutex_destroy(&m_taskLocks[i]);
+		pthread_cond_destroy(&m_taskConds[i]);
+	}
+	delete[] m_tasks;
+	delete[] m_tasksTemp;
+	delete[] m_taskLocks;
+	delete[] m_taskConds;
 }
 
 int FThreadPool::init()
 {
-	m_mutex = PTHREAD_MUTEX_INITIALIZER;
-	m_cond = PTHREAD_COND_INITIALIZER;
+	pthread_mutex_init(&m_mutex, NULL);
+
+	for (size_t i = 0; i < m_taskQueueNum; ++i)
+	{
+		pthread_mutex_init(&m_taskLocks[i], NULL);
+		pthread_cond_init(&m_taskConds[i], NULL);
+	}
 
 	pthread_attr_init(&m_attr);
 	// set m_attr ...
@@ -46,6 +80,7 @@ int FThreadPool::createThead()
 	if (ret == 0)
 	{
 		m_idle.insert(tid);
+		m_threadIndexMap.insert(std::map<pthread_t, size_t>::value_type(tid, m_size));
 		++m_size;
 		DLOGM_PRINT_T("create thread %lu, current size = %lu\n", (long unsigned int)tid, m_size);
 	}
@@ -63,6 +98,7 @@ int FThreadPool::cancelThread(pthread_t tid)
 	{
 		m_idle.erase(tid);
 		m_busy.erase(tid);
+		m_threadIndexMap.erase(tid);
 		--m_size;
 		DLOGM_PRINT_T("cancel thread %lu, current size = %lu\n", (long unsigned int)tid, m_size);
 	}
@@ -90,23 +126,24 @@ void* FThreadPool::ThreadRun(void *arg)
 {
 	FThreadPool *pool = (FThreadPool*) arg;
 	pthread_t tid = pthread_self();
+	int index = pool->hashThread(tid);
 
 	while (true)
 	{
 		pthread_mutex_lock(&pool->m_mutex);
-		if (!pool->hasTask())
+		if (!pool->hasTask(tid))
 		{
 			pool->moveToIdle(tid);
-			pthread_cond_wait(&pool->m_cond, &pool->m_mutex);
+			pthread_cond_wait(&pool->m_taskConds[index], &pool->m_mutex);
 			pool->moveToBusy(tid);
 		}
 		else
 		{
 			pool->moveToBusy(tid);
 		}
-		FThreadTask *task = pool->popTask();
 		pthread_mutex_unlock(&pool->m_mutex);
 
+		FThreadTask *task = pool->popTask();
 		if (task != NULL)
 		{
 			task->run();
@@ -119,17 +156,10 @@ void* FThreadPool::ThreadRun(void *arg)
 
 inline void FThreadPool::moveToIdle(pthread_t tid)
 {
-	if (isOverflow())
+	if (m_idle.count(tid) == 0)
 	{
-		cancelThread(tid);
-	}
-	else
-	{
-		if (m_idle.count(tid) == 0)
-		{
-			m_busy.erase(tid);
-			m_idle.insert(tid);
-		}
+		m_busy.erase(tid);
+		m_idle.insert(tid);
 	}
 }
 
@@ -147,75 +177,116 @@ inline bool FThreadPool::isBusy(pthread_t tid)
 	return m_busy.count(tid) > 0;
 }
 
-inline bool FThreadPool::isFull()
+int FThreadPool::pushTask(FThreadTask *task)
 {
-	return m_maxSize > 0 && m_size >= m_maxSize;
-}
+	if (isTaskFull())
+		return 0;
 
-inline bool FThreadPool::isOverflow()
-{
-	return m_maxSize > 0 && m_size > m_maxSize;
-}
-
-bool FThreadPool::pushTask(FThreadTask *task)
-{
-	bool ret = false;
-	pthread_mutex_lock(&m_mutex);
-	if (!isTaskFull())
+	int index = hashTask(task);
+	pthread_mutex_lock(&m_taskLocks[index]);
 	{
-		m_tasks.push_back(task);
-		if (m_idle.empty() && !isFull())
-		{
-			createThead();
-		}
-		ret = true;
+		m_tasks[index].push_back(task);
 	}
-	pthread_mutex_unlock(&m_mutex);
-	pthread_cond_signal(&m_cond);
-	return ret;
+	pthread_mutex_unlock(&m_taskLocks[index]);
+
+	m_taskCount.fetch_add(1);
+
+	pthread_cond_signal(&m_taskConds[index]);
+
+	return 1;
+}
+
+int FThreadPool::pushTask(const std::list<FThreadTask*> &tasks)
+{
+	int count = 0;
+	std::list<FThreadTask*>::const_iterator it = tasks.begin();
+	while (it != tasks.end())
+	{
+		FThreadTask *task = *it;
+		int index = hashTask(task);
+		m_tasksTemp[index].push_back(task);
+	}
+
+	for (size_t i = 0; i < m_taskQueueNum; ++i)
+	{
+		std::list<FThreadTask*> &taskList = m_tasksTemp[i];
+		if (taskList.empty())
+			continue;
+
+		int num = 0;
+		it = taskList.begin();
+		pthread_mutex_lock(&m_taskLocks[i]);
+		while (!isTaskFull() && it != taskList.end())
+		{
+			FThreadTask *task = *it;
+			int index = hashTask(task);
+			m_tasks[index].push_back(task);
+			++num;
+			++it;
+		}
+		pthread_mutex_unlock(&m_taskLocks[i]);
+
+		if (num > 0)
+		{
+			m_taskCount.fetch_add(num);
+			count += num;
+		}
+
+		for (int i = 0; i < num; ++i)
+		{
+			pthread_cond_signal(&m_taskConds[i]);
+		}
+
+		taskList.clear();
+	}
+
+	return count;
 }
 
 inline FThreadTask* FThreadPool::popTask()
 {
-	if (!m_tasks.empty())
+	FThreadTask *task = NULL;
+	int index = hashThread(pthread_self());
+
+	pthread_mutex_lock(&m_taskLocks[index]);
+	if (!m_tasks[index].empty())
 	{
-		FThreadTask *task = m_tasks.front();
-		m_tasks.pop_front();
-		return task;
+		task = m_tasks[index].front();
+		m_tasks[index].pop_front();
+		m_taskCount.fetch_sub(1);
+	}
+	pthread_mutex_unlock(&m_taskLocks[index]);
+
+	return task;
+}
+
+inline int FThreadPool::hashTask(FThreadTask *task)
+{
+	return ((size_t) task) % m_taskQueueNum;
+}
+
+inline int FThreadPool::hashThread(pthread_t tid)
+{
+	std::map<pthread_t, size_t>::iterator it = m_threadIndexMap.find(tid);
+	if (it != m_threadIndexMap.end())
+	{
+		return it->second % m_taskQueueNum;
 	}
 	else
 	{
-		return NULL;
+		return ((size_t) tid) % m_taskQueueNum;
 	}
 }
 
-inline bool FThreadPool::hasTask()
+inline bool FThreadPool::hasTask(pthread_t tid)
 {
-	return !m_tasks.empty();
+	int index = hashThread(tid);
+	return !m_tasks[index].empty();
 }
 
 inline bool FThreadPool::isTaskFull()
 {
-	return m_taskQueueSize > 0 && m_tasks.size() >= m_taskQueueSize;
-}
-
-void FThreadPool::setMaxSize(size_t maxSize)
-{
-	pthread_mutex_lock(&m_mutex);
-	m_maxSize = maxSize;
-	if (m_maxSize > 0)
-	{
-		while (m_size > m_maxSize)
-		{
-			if (m_idle.empty())
-				break;
-			std::set<pthread_t>::iterator it = m_idle.begin();
-			pthread_t tid = *it;
-			if (cancelThread(tid) != 0)
-				break;
-		}
-	}
-	pthread_mutex_unlock(&m_mutex);
+	return m_taskQueueSize > 0 && (size_t) m_taskCount >= m_taskQueueSize;
 }
 
 void FThreadPool::setTaskQueueSize(size_t maxSize)
@@ -226,8 +297,8 @@ void FThreadPool::setTaskQueueSize(size_t maxSize)
 void FThreadPool::printStatus()
 {
 	pthread_mutex_lock(&m_mutex);
-	DLOGM_PRINT_T("[pool] maxSize: %lu, size: %lu, busy: %lu, idle: %lu, task: %lu\n", m_maxSize, m_size, m_busy.size(),
-			m_idle.size(), m_tasks.size());
+	DLOGM_PRINT_T("[pool] size: %lu, busy: %lu, idle: %lu, task: %d\n", m_size, m_busy.size(), m_idle.size(),
+			m_taskCount.load());
 	pthread_mutex_unlock(&m_mutex);
 }
 
