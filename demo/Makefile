@@ -15,7 +15,7 @@ TARGET = fProxy.exe fClient.exe test.exe
 all: depend $(TARGET)
 
 depend:
-	$(CXX) $(INCLUDES) -MM $(SRCS) > .depend
+	$(CXX) $(CXXFLAGS) $(INCLUDES) -MM $(SRCS) > .depend
 
 -include .depend
 

@@ -297,7 +297,7 @@ void FThreadPool::setTaskQueueSize(size_t maxSize)
 void FThreadPool::printStatus()
 {
 	pthread_mutex_lock(&m_mutex);
-	DLOGM_PRINT_T("[pool] size: %lu, busy: %lu, idle: %lu, task: %d\n", m_size, m_busy.size(), m_idle.size(),
+	DLOGM_PRINT_T("[pool] size: %3lu, busy: %3lu, idle: %3lu, task: %d\n", m_size, m_busy.size(), m_idle.size(),
 			m_taskCount.load());
 	pthread_mutex_unlock(&m_mutex);
 }

@@ -14,7 +14,7 @@ OUT_DIR = ../libs
 all: depend $(TARGET)
 
 depend:
-	$(CXX) $(INCLUDES) -MM $(SRCS) > .depend
+	$(CXX) $(CXXFLAGS) $(INCLUDES) -MM $(SRCS) > .depend
 
 -include .depend
 
