@@ -27,7 +27,6 @@ FP_Socks5::FP_Socks5() {
 }
 
 FP_Socks5::~FP_Socks5() {
-	// TODO Auto-generated destructor stub
 }
 
 int FP_Socks5::process(FSocketTcp *socket) {

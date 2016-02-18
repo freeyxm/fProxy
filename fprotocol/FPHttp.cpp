@@ -15,7 +15,6 @@ namespace freeyxm {
 
 FPHttp::FPHttp() {
 	// TODO Auto-generated constructor stub
-
 }
 
 FPHttp::~FPHttp() {

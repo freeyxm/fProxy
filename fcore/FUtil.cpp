@@ -20,12 +20,10 @@ namespace freeyxm {
 
 FUtil::FUtil()
 {
-	// TODO Auto-generated constructor stub
 }
 
 FUtil::~FUtil()
 {
-	// TODO Auto-generated destructor stub
 }
 
 void FUtil::print_hex(FILE *out, const unsigned char *bytes, const int size, const int line_num)
@@ -67,7 +65,7 @@ const char* FUtil::getErrStr(int errCode)
 	return buf;
 #else
 	static __thread char buf[BUF_SIZE] = "";
-#if defined __USE_XOPEN2K && !defined __USE_GNU
+#if ! _GNU_SOURCE
 	int ret = ::strerror_r(errCode, buf, BUF_SIZE);
 	if(ret != 0)
 	{

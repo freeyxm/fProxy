@@ -60,7 +60,7 @@ public:
 protected:
 	bool initSocketDomain(int domain, int type);
 	int createSocket();
-	int setSockaddr(struct sockaddr *pSockAddr, const char *addr, const in_port_t port);
+	int setSockAddr(struct sockaddr *pSockAddr, const char *addr, const in_port_t port);
 
 protected:
 	int m_sockfd;

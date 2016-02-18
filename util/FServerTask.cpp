@@ -12,12 +12,10 @@ namespace freeyxm {
 FServerTask::FServerTask(FServer *pServer, FSocketTcp *pSocket) :
 		FThreadTask(pSocket), m_pServer(pServer)
 {
-	// TODO Auto-generated constructor stub
 }
 
 FServerTask::~FServerTask()
 {
-	// TODO Auto-generated destructor stub
 }
 
 void FServerTask::run()

@@ -13,12 +13,10 @@ namespace freeyxm {
 FSocketDomain4::FSocketDomain4(int socket_type) :
 		FSocketDomain(AF_INET, socket_type)
 {
-	// TODO Auto-generated constructor stub
 }
 
 FSocketDomain4::~FSocketDomain4()
 {
-	// TODO Auto-generated destructor stub
 }
 
 void FSocketDomain4::setLocalAddress(const struct sockaddr* addr)

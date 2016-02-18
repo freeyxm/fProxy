@@ -23,13 +23,10 @@ namespace freeyxm {
 
 FProtocol::FProtocol()
 {
-	// TODO Auto-generated constructor stub
-
 }
 
 FProtocol::~FProtocol()
 {
-	// TODO Auto-generated destructor stub
 }
 
 void FProtocol::inet_ntop(int af, const void *cp, string &addr)

@@ -22,12 +22,10 @@ FPtrMgr<FThreadTask> FThreadTask::m_ptrMgr = FPtrMgr<FThreadTask>(0);
 FThreadTask::FThreadTask(void *data) :
 		m_data(data)
 {
-	// TODO Auto-generated constructor stub
 }
 
 FThreadTask::~FThreadTask()
 {
-	// TODO Auto-generated destructor stub
 }
 
 void FThreadTask::run()

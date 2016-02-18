@@ -11,11 +11,9 @@
 namespace freeyxm {
 
 FString::FString() {
-	// TODO Auto-generated constructor stub
 }
 
 FString::~FString() {
-	// TODO Auto-generated destructor stub
 }
 
 string FString::trim(const string str) {

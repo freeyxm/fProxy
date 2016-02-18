@@ -18,7 +18,6 @@ FSocketUdp::FSocketUdp(int domain) :
 
 FSocketUdp::~FSocketUdp()
 {
-	// TODO Auto-generated destructor stub
 }
 
 int FSocketUdp::createSocket()
@@ -48,7 +47,7 @@ int FSocketUdp::sendTo(const char *buf, const size_t size)
 
 int FSocketUdp::sendTo(const char *buf, const size_t size, const char *host, const in_port_t port)
 {
-	int addrLen = this->setSockaddr(this->getRemoteAddress(), host, port);
+	int addrLen = this->setSockAddr(this->getRemoteAddress(), host, port);
 	if (addrLen < 0)
 	{
 		return -1;

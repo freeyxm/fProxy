@@ -12,12 +12,9 @@
 namespace freeyxm {
 
 FPmTest::FPmTest() {
-	// TODO Auto-generated constructor stub
-
 }
 
 FPmTest::~FPmTest() {
-	// TODO Auto-generated destructor stub
 }
 
 /*

@@ -15,12 +15,10 @@ LogLevel FLogger::log_level = LogLevel::DEBUG;
 
 FLogger::FLogger()
 {
-	// TODO Auto-generated constructor stub
 }
 
 FLogger::~FLogger()
 {
-	// TODO Auto-generated destructor stub
 }
 
 void FLogger::log(LogLevel level, const char *fmt, ...)

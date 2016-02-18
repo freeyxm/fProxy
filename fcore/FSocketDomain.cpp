@@ -16,7 +16,6 @@ namespace freeyxm {
 FSocketDomain::FSocketDomain(int socket_domain, int socket_type) :
 		m_socketfd(-1), m_socketDomain(socket_domain), m_socketType(socket_type)
 {
-	// TODO Auto-generated constructor stub
 }
 
 FSocketDomain::~FSocketDomain()

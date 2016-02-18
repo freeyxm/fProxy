@@ -14,12 +14,10 @@ namespace freeyxm {
 FSocketTcp::FSocketTcp(int domain) :
 		FSocket(domain, SOCK_STREAM)
 {
-	// TODO Auto-generated constructor stub
 }
 
 FSocketTcp::~FSocketTcp()
 {
-	// TODO Auto-generated destructor stub
 }
 
 int FSocketTcp::listen(const int n)

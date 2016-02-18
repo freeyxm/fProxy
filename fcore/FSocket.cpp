@@ -267,7 +267,7 @@ const char* FSocket::getErrStr()
 	return FUtil::getErrStr(); // need to repair!!!
 }
 
-int FSocket::setSockaddr(struct sockaddr *pSockAddr, const char *addr, const in_port_t port)
+int FSocket::setSockAddr(struct sockaddr *pSockAddr, const char *addr, const in_port_t port)
 {
 	struct addrinfo *res;
 	int domain = m_pSocketDomain->getSocketDomain();
