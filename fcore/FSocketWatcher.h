@@ -15,8 +15,8 @@
 class FSocketWatcher
 {
 public:
-	const int READY_QUEUE_SIZE = 2;
-	const int WAIT_QUEUE_SIZE = READY_QUEUE_SIZE + 1;
+	static const int READY_QUEUE_SIZE = 2;
+	static const int WAIT_QUEUE_SIZE = READY_QUEUE_SIZE + 1;
 
 	FSocketWatcher();
 	virtual ~FSocketWatcher();

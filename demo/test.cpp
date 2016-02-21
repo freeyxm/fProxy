@@ -13,8 +13,8 @@
 using namespace std;
 using namespace freeyxm;
 
-int main(void) {
-
+int main_test(void)
+{
 	string str1("  12 zc "), str2("ab  "), str3("cd "), str4("  "), str5("");
 
 	printf("str1=[%s]\n", FString::trim(str1).c_str());

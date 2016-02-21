@@ -25,9 +25,8 @@ void serv_process_socket5(FSocketTcp *socket);
 void serv_process_socket52(FSocketTcp *socket);
 void serv_process_http(FSocketTcp *socket);
 
-int main(void)
+int main_server(void)
 {
-
 	setvbuf(stdout, (char*) NULL, _IOLBF, 0);
 
 #if __win32__

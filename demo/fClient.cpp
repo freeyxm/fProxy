@@ -30,8 +30,8 @@ inline void mutexIncCount() {
 
 void conenctServr(void*);
 
-int main(void) {
-
+int main_client(void)
+{
 	setvbuf(stdout, (char*) NULL, _IOLBF, 0);
 
 #if __WIN32__
