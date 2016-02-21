@@ -17,7 +17,7 @@ public:
 	FPmTest();
 	virtual ~FPmTest();
 
-	static long getRunTime(const int threadNum, const ft_funparam_t *p_fp);
+	static long getRunTime(const int threadNum, const FThread::fun_param *p_fp);
 };
 
 } /* namespace freeyxm */

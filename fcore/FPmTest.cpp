@@ -20,7 +20,7 @@ FPmTest::~FPmTest() {
 /*
  * testPM: success, return the run time (unit: us); error, return -1.
  */
-long FPmTest::getRunTime(const int threadNum, const ft_funparam_t *p_fp) {
+long FPmTest::getRunTime(const int threadNum, const FThread::fun_param *p_fp) {
 	if (!p_fp) {
 		fprintf(stdout, "tpm: p_fp not init!\n");
 		return -1;

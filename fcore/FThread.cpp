@@ -15,53 +15,56 @@
 
 namespace freeyxm {
 
-FThread::FThread(const ft_funparam_t *p_fp) {
-	this->threadHandle = 0; // ...
-	if (p_fp) {
-		::memcpy(&this->funparam, p_fp, sizeof(this->funparam));
+FThread::FThread(const fun_param *fp) {
+	clear();
+	if (fp) {
+		this->m_funp = *fp;
 	}
 }
 
 FThread::~FThread() {
 }
 
+void FThread::clear() {
+	m_handle = 0;
+	m_running = false;
+}
+
 int FThread::start() {
-	int ret = testThread();
+	int ret = stop();
 	if (ret) {
 		return ret;
 	}
-	void *p_fp = ::malloc(sizeof(this->funparam)); // free by startThread if pthread_create call success !!!
-	::memcpy(p_fp, &this->funparam, sizeof(this->funparam));
-	ret = ::pthread_create(&this->threadHandle, NULL, startThread, p_fp);
+
+	m_running = true;
+	ret = ::pthread_create(&this->m_handle, NULL, startThread, this);
 	if (ret) {
-		this->threadHandle = 0;
-		::free(p_fp);
+		clear();
 		return ret;
 	}
 	return 0;
 }
 
-void* FThread::startThread(void *p_param) {
-	ft_funparam_t *p_fp = (ft_funparam_t*) p_param;
-	//DEBUG_PRINT_T("thread %d working, handle: %d, param: %d.\n", ::pthread_self(), p_fp->handle, p_fp->param);
-	(*(p_fp->handle))(p_fp->param);
-	::free(p_param); // !!!
-	//DEBUG_PRINT_T("thread %d done!\n", ::pthread_self());
+void* FThread::startThread(void *param) {
+	FThread *thread = (FThread*) param;
+	//DLOG_PRINT_T("thread %d start ...\n", ::pthread_self());
+	(*(thread->m_funp.fun))(thread->m_funp.param);
+	thread->m_running = false;
+	//DLOG_PRINT_T("thread %d done!\n", ::pthread_self());
 	return NULL;
 }
 
-int FThread::testThread() {
+int FThread::stop() {
 	int ret = 0;
-	if (this->threadHandle) {
+	if (this->m_handle) {
 		// test thread whether running or not ...
-		int kill_rc = ::pthread_kill(this->threadHandle, 0);
+		int kill_rc = ::pthread_kill(this->m_handle, 0);
 		switch (kill_rc) {
 		case 0: // Success, a thread already running.
 			ret = 1;
 			break;
 		case ESRCH: // No such process.
-			::pthread_join(this->threadHandle, NULL); // ...
-			this->threadHandle = 0;
+			join();
 			ret = 0;
 			break;
 		default: // Error occured.
@@ -73,41 +76,37 @@ int FThread::testThread() {
 }
 
 int FThread::join() {
-	if (this->threadHandle) {
-		int ret = FThread::join(this->threadHandle);
-		this->threadHandle = 0;
+	if (this->m_handle) {
+		int ret = FThread::join(this->m_handle);
+		clear();
 		return ret;
 	}
 	return 0;
 }
 
 int FThread::detach() {
-	if (this->threadHandle) {
-		return FThread::detach(this->threadHandle);
+	if (this->m_handle) {
+		return FThread::detach(this->m_handle);
 	}
 	return 0;
 }
 
 int FThread::cancel() {
-	if (this->threadHandle) {
-		return FThread::cancel(this->threadHandle);
+	if (this->m_handle) {
+		return FThread::cancel(this->m_handle);
 	}
 	return 0;
 }
 
 int FThread::kill(const int signum) {
-	if (this->threadHandle) {
-		return FThread::kill(this->threadHandle, signum);
+	if (this->m_handle) {
+		return FThread::kill(this->m_handle, signum);
 	}
 	return 0;
 }
 
-int FThread::setFunParam(const ft_funparam_t *p_fp) {
-	int ret = testThread();
-	if (ret) {
-		return ret;
-	}
-	::memcpy(&this->funparam, p_fp, sizeof(this->funparam));
+int FThread::setFunParam(const fun_param *p_fp) {
+	this->m_funp = *p_fp;
 	return 0;
 }
 

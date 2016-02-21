@@ -20,16 +20,16 @@ namespace freeyxm {
 #define SIGUSR1 10
 #endif
 
-typedef void (*ft_fun_t)(void*);
-
-typedef struct {
-	ft_fun_t handle; // function call by new thread.
-	void *param; // pointer to param deliver to function call by new thread.
-} ft_funparam_t;
-
 class FThread {
 public:
-	FThread(const ft_funparam_t *p_fp = NULL);
+	typedef void (*thread_fun)(void*);
+
+	typedef struct {
+		thread_fun fun; // function call by new thread.
+		void *param; // pointer to param deliver to function call by new thread.
+	} fun_param;
+
+	FThread(const fun_param *fp = NULL);
 	virtual ~FThread();
 
 	int start();
@@ -38,7 +38,7 @@ public:
 	int cancel();
 	int kill(const int signum);
 
-	int setFunParam(const ft_funparam_t *p_fp);
+	int setFunParam(const fun_param *fp);
 
 	static pthread_t self();
 	static int join(pthread_t tid);
@@ -48,11 +48,13 @@ public:
 
 private:
 	static void* startThread(void*);
-	int testThread();
+	int stop();
+	void clear();
 
 private:
-	pthread_t threadHandle;
-	ft_funparam_t funparam;
+	pthread_t m_handle;
+	fun_param m_funp;
+	bool m_running;
 };
 
 } /* namespace freeyxm */

@@ -43,8 +43,8 @@ int main(void) {
 #endif
 	printf("client ready!\n");
 
-	ft_funparam_t fp;
-	fp.handle = conenctServr;
+	FThread::fun_param fp;
+	fp.fun = conenctServr;
 	fp.param = NULL;
 
 	g_count = 0;
