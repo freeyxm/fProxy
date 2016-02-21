@@ -21,7 +21,7 @@ namespace freeyxm {
 static FServer *g_server;
 
 FServer::FServer(const string addr, const int port, const unsigned int max_conn_num) :
-		m_serverSocket(AF_INET6), m_threadPool(10, 200), m_addr(addr), m_port(port), m_maxConnNum(max_conn_num), m_maxConnNumSem()
+		m_serverSocket(AF_INET), m_threadPool(10, 200), m_addr(addr), m_port(port), m_maxConnNum(max_conn_num), m_maxConnNumSem()
 {
 	m_funHandle = NULL;
 	m_listenQueueLen = 10;
